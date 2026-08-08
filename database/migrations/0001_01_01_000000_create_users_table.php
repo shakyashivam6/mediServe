@@ -26,6 +26,7 @@ return new class extends Migration
             $table->integer('state');
             $table->integer('pincode');
             $table->integer('address');
+            $table->enum('role', ['admin', 'store', 'customer', 'distributer']);
             $table->boolean('isActive');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
