@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
                 'address' => 1,
                 'role' => 'admin',
                 'isActive' => true,
-                'password' => '8892205223',
+                'password' => '4029',
             ],
             [
                 'first_name' => 'Abhishek',
