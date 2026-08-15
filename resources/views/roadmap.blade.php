@@ -190,8 +190,8 @@
             gap: 6px;
         }
         .role-card.admin .role-icon { background: var(--indigo-soft); color: var(--indigo); }
-        .role-card.owner .role-icon { background: var(--teal-soft); color: var(--teal); }
-        .role-card.delivery .role-icon { background: var(--amber-soft); color: var(--amber); }
+        .role-card.store .role-icon { background: var(--teal-soft); color: var(--teal); }
+        .role-card.captain .role-icon { background: var(--amber-soft); color: var(--amber); }
         .role-card.customer .role-icon { background: var(--blue-soft); color: var(--blue); }
 
         /* ---------- Logic callouts ---------- */
@@ -215,6 +215,7 @@
             font-size: 15px;
             border-bottom: 1px solid var(--line);
         }
+        .logic-card.otp .logic-head { background: var(--blue-soft); color: #1d4ed8; }
         .logic-card.radius .logic-head { background: var(--teal-soft); color: #0f766e; }
         .logic-card.rx .logic-head { background: var(--amber-soft); color: #92400e; }
         .logic-card ol {
@@ -393,7 +394,7 @@
             <span class="eyebrow">Internal · Draft v1</span>
             <h1>Pharmacy Delivery Platform — Product Roadmap</h1>
             <p class="lead">
-                Ek roadmap jo MediServe ke 4 login roles (Admin, Owner, Delivery Boy, Customer),
+                Ek roadmap jo MediServe ke 4 login roles (Admin, Store, Captain, Customer),
                 radius-based delivery logic, prescription (Rx) verification flow, aur admin panel
                 ke saare modules ko ek jagah define karta hai.
             </p>
@@ -411,7 +412,7 @@
             <div class="section-head">
                 <div class="kicker">Access Model</div>
                 <h2>4 Types of Logins</h2>
-                <p>Har role ka apna dashboard aur permission scope hoga. Admin aur Owner dono panel-based hai, Delivery Boy ek lightweight app/PWA, aur Customer ka apna storefront + app.</p>
+                <p>Har role ka apna dashboard aur permission scope hoga. Admin aur Store dono panel-based hai, Captain (delivery staff, apni Store ke andar bana hua) ek lightweight app/PWA, aur Customer ka apna storefront + app. Customer site par seedhe aakar <strong>self-signup</strong> karta hai aur <strong>OTP-based login</strong> use karta hai (no password) — Store aur Captain ke liye abhi koi public signup nahi hai, dono Admin panel se create hote hain.</p>
             </div>
             <div class="role-grid">
 
@@ -422,41 +423,47 @@
                         <h3>Admin</h3>
                     </div>
                     <ul>
-                        <li>Role &amp; permission based access control (custom roles for sub-admins)</li>
-                        <li>Global stock &amp; inventory oversight across all Owners</li>
-                        <li>Approve / reject Owner (pharmacy) onboarding &amp; KYC</li>
+                        <li>Role &amp; permission based access control — custom Admin roles (Super Admin, Store Manager, Catalog Manager, Support Admin, Finance Admin…) each with their own permission set</li>
+                        <li>Menu is permission-gated — a role sees a module only if it holds that module's permission; unassigned modules stay hidden automatically</li>
+                        <li>Directly register Store &amp; Captain accounts (Admin panel forms) — neither role has public self-signup for now</li>
+                        <li>Approve/reject Stores after KYC (license, GST, Aadhaar/PAN) — login stays inactive until approved</li>
+                        <li>Full control over all users — Store, Captain, Customer (activate/deactivate, reset login/password)</li>
+                        <li>Oversight of every Store's Captains — can view/override/deactivate any of them</li>
                         <li>Master catalog: Products, Categories, Category Groups, Tags, Substitute Products</li>
+                        <li>Global stock &amp; inventory oversight across all Stores</li>
                         <li>Coupons &amp; Offers, Banners, Health Articles, Content, Careers</li>
                         <li>Prescription compliance audit</li>
-                        <li>Admin Users, App Config, Settings</li>
+                        <li>App Config &amp; Settings</li>
                     </ul>
                 </div>
 
-                <div class="role-card owner">
+                <div class="role-card store">
                     <div class="role-icon">🏪</div>
                     <div>
                         <span class="role-tag">Pharmacy Level</span>
-                        <h3>Owner</h3>
+                        <h3>Store</h3>
                     </div>
                     <ul>
-                        <li>Store profile: location (lat/long) + delivery service radius</li>
+                        <li>Store profile: shop name, license/GST, KYC (Aadhaar/PAN), location (lat/long)</li>
+                        <li>Delivery radius (km) + speed (kmph) — both optional; skipping both means relying on a future delivery-partner integration for all orders</li>
                         <li>Stock / inventory management (batch &amp; expiry tracking)</li>
-                        <li>Receive, accept &amp; prepare Orders</li>
-                        <li>Assign orders to Delivery Boys</li>
-                        <li>Verify prescription copy before dispatching Rx orders</li>
+                        <li>Register &amp; manage own Captains (delivery staff)</li>
+                        <li>Receive, accept &amp; prepare Orders; assign to own Captains</li>
+                        <li>Examine uploaded prescriptions, mark available medicines/substitutes, and chat with customer before proceeding</li>
                         <li>Store-level sales reports &amp; earnings</li>
                     </ul>
                 </div>
 
-                <div class="role-card delivery">
+                <div class="role-card captain">
                     <div class="role-icon">🛵</div>
                     <div>
                         <span class="role-tag">Field Level</span>
-                        <h3>Delivery Boy</h3>
+                        <h3>Captain</h3>
                     </div>
                     <ul>
+                        <li>Created &amp; managed by their Store (not directly by Admin)</li>
                         <li>Online / offline availability toggle</li>
-                        <li>Assigned order queue with navigation</li>
+                        <li>Assigned order queue, scoped to their Store's orders, with navigation</li>
                         <li>Status updates: Picked up → Out for delivery → Delivered</li>
                         <li>Proof of delivery (OTP / signature / photo)</li>
                         <li>COD collection &amp; reconciliation</li>
@@ -471,10 +478,12 @@
                         <h3>Customer</h3>
                     </div>
                     <ul>
+                        <li>Self-registers directly on the site/app; login is <strong>OTP-based</strong> (no password)</li>
                         <li>Saved addresses + live GPS location</li>
                         <li>Browse categories/products, search medicines &amp; substitutes</li>
                         <li>See <strong>Fast Delivery</strong> or <strong>Expected Delivery Date</strong> per location</li>
-                        <li>Mandatory prescription upload for Rx medicines</li>
+                        <li>OTP-verified mobile number + live lat/long for prescription orders &amp; delivery matching</li>
+                        <li>Upload prescription copy &amp; chat with Store to confirm available medicines</li>
                         <li>Cart, coupons, checkout, live order tracking</li>
                         <li>Reviews, Health Articles, Notifications</li>
                     </ul>
@@ -494,35 +503,53 @@
             </div>
             <div class="logic-grid">
 
+                <div class="logic-card otp">
+                    <div class="logic-head">📱 OTP-Verified Location Capture</div>
+                    <ol>
+                        <li>Customer apna <strong>mobile number</strong> enter karta hai aur GPS se current <strong>lat/long</strong> location share karta hai.</li>
+                        <li>Mobile number par OTP bheja jata hai — verify hone ke baad hi location, order ya prescription request ke saath lock hoti hai.</li>
+                        <li><strong>Local/dev environment</strong> (<code>APP_ENV=local</code>) me static OTP <strong>123456</strong> accept hota hai — real SMS gateway call ki zaroorat nahi, QA/testing fast hoti hai.</li>
+                        <li><strong>Production</strong> me real SMS gateway (e.g. MSG91 / Twilio) se OTP generate aur verify hota hai.</li>
+                        <li>Verified mobile number hi Store ↔ Customer communication (prescription clarification, order updates) ke liye use hota hai.</li>
+                    </ol>
+                    <div class="badge-row">
+                        <span class="pill fast">🔐 OTP Verified</span>
+                        <span class="pill eta">🧪 Local OTP: 123456</span>
+                    </div>
+                </div>
+
                 <div class="logic-card radius">
                     <div class="logic-head">📍 Radius-based Delivery Availability</div>
                     <ol>
                         <li><strong>Location capture</strong> — customer ki GPS location ya saved address geocode hoti hai (lat/long).</li>
-                        <li><strong>Nearby match</strong> — system un Owners ko dhundta hai jinke paas ordered product ka stock available hai.</li>
-                        <li><strong>Distance check</strong> — customer aur har candidate Owner ke beech distance calculate hota hai (Haversine formula).</li>
-                        <li>Agar distance <strong>Owner ke defined radius ke andar</strong> hai → <strong>Fast Delivery</strong> label + ETA dikhta hai.</li>
-                        <li>Agar koi Owner radius ke andar nahi milta → nearest available Owner se <strong>Expected Delivery Date</strong> (standard SLA) dikhaya jata hai.</li>
-                        <li>Admin har Owner/city ke liye default fallback SLA (e.g. 2–4 din) configure kar sakta hai.</li>
+                        <li><strong>Nearby match</strong> — system un Stores ko dhundta hai jinke paas ordered product ka stock available hai.</li>
+                        <li><strong>Distance check</strong> — customer aur har candidate Store ke beech distance calculate hota hai (Haversine formula).</li>
+                        <li>Har Store apna <strong>delivery radius (km)</strong> aur <strong>delivery speed (kmph)</strong> define karta hai — dono <strong>optional</strong> hain; ek Store dono skip kar sakta hai aur poori tarah delivery-partner (future) par depend kar sakta hai.</li>
+                        <li>Agar customer <strong>Store ke radius ke andar</strong> hai → <strong>ETA = distance ÷ speed</strong> se calculate hota hai. Ye ETA ek configurable threshold se kam hai to <strong>Fast Delivery</strong> badge + ETA dikhta hai — <em>ye ek manual flag nahi hai</em>, purely radius+speed ka result hai.</li>
+                        <li>Agar koi Store radius ke andar nahi milta (ya Store ne radius/speed define nahi kiya) → nearest available Store se <strong>Expected Delivery Date</strong> (standard fallback SLA) dikhaya jata hai.</li>
+                        <li>Admin har Store/city ke liye default fallback SLA (e.g. 2–4 din) configure kar sakta hai.</li>
+                        <li><strong>Future:</strong> radius ke bahar ke orders ek third-party <strong>delivery-partner API</strong> se bhi fulfil ho sakte hain — abhi built nahi hai, vendor decide hone ke baad add hoga.</li>
                     </ol>
                     <div class="badge-row">
-                        <span class="pill fast">⚡ Fast Delivery — within radius</span>
-                        <span class="pill eta">📅 Expected Delivery Date — outside radius</span>
+                        <span class="pill fast">⚡ Fast Delivery — ETA under threshold</span>
+                        <span class="pill eta">📅 Expected Delivery Date — fallback SLA</span>
                     </div>
                 </div>
 
                 <div class="logic-card rx">
-                    <div class="logic-head">📄 Prescription (Rx) Verification Flow</div>
+                    <div class="logic-head">📄 Prescription (Rx) Examine &amp; Fulfil Flow</div>
                     <ol>
-                        <li>Har Product par <strong>requires_prescription</strong> flag Admin/Owner set karte hain (Rx vs OTC).</li>
-                        <li>Customer jab Rx medicine cart me add karta hai → checkout se pehle prescription upload (image/PDF) mandatory hota hai.</li>
-                        <li>Order <strong>"Pending Prescription Verification"</strong> state me chala jata hai.</li>
-                        <li>Owner / Admin pharmacist prescription review karke <strong>Approve</strong> ya <strong>Reject</strong> karta hai.</li>
-                        <li>Approved → packing/dispatch aage badhta hai. Rejected → customer ko notify karke re-upload ya item remove karne ka option.</li>
-                        <li>Prescription copy order ke saath audit ke liye <em>Prescriptions</em> module me store rehti hai.</li>
+                        <li>Har Product par <strong>requires_prescription</strong> flag Admin/Store set karte hain (Rx vs OTC) — customer directly bhi prescription upload karke order start kar sakta hai.</li>
+                        <li>Customer prescription copy upload karta hai (image/PDF), saath me <strong>OTP-verified mobile number</strong> aur <strong>lat/long</strong> location deta hai.</li>
+                        <li>Order <strong>"Pending Store Review"</strong> state me jata hai aur Store ko notify hota hai.</li>
+                        <li>Store prescription <strong>examine</strong> karta hai, apne stock ke against <strong>available medicines</strong> match karta hai (zaroorat pe substitute suggest kar sakta hai).</li>
+                        <li>Store in-app <strong>chat</strong> se customer se communicate karta hai — quantity, substitute aur price confirm karta hai.</li>
+                        <li>Customer confirm karta hai → order finalize hokar packing/dispatch me aage badhta hai (fast-delivery/radius logic ke hisaab se).</li>
+                        <li>Prescription copy + chat log order ke saath audit ke liye <em>Prescriptions</em> module me store rehta hai.</li>
                     </ol>
                     <div class="badge-row">
-                        <span class="pill fast">✅ Verified → Dispatch</span>
-                        <span class="pill eta">⛔ Rejected → Re-upload</span>
+                        <span class="pill fast">✅ Confirmed → Dispatch</span>
+                        <span class="pill eta">💬 Store ↔ Customer Chat</span>
                     </div>
                 </div>
 
@@ -534,7 +561,7 @@
     <section id="modules">
         <div class="wrap">
             <div class="section-head">
-                <div class="kicker">Admin / Owner Panel</div>
+                <div class="kicker">Admin / Store Panel</div>
                 <h2>Feature Modules</h2>
                 <p>Shared sidebar menu se derive kiye gaye modules, logical groups me organize kiye gaye.</p>
             </div>
@@ -567,8 +594,8 @@
                     <div class="chip-list">
                         <span class="chip">Customers</span>
                         <span class="chip">Admin Users</span>
-                        <span class="chip">Owners</span>
-                        <span class="chip">Delivery Boys</span>
+                        <span class="chip">Stores</span>
+                        <span class="chip">Captains</span>
                     </div>
                 </div>
 
@@ -609,11 +636,11 @@
 
             <div class="timeline">
 
-                <div class="phase progress">
+                <div class="phase done">
                     <div class="phase-card">
                         <div class="phase-top">
                             <h3>Phase 0 — Foundation</h3>
-                            <span class="status progress">In Progress</span>
+                            <span class="status done">Done</span>
                         </div>
                         <p class="desc">Base auth scaffolding aur seed data setup.</p>
                         <ul>
@@ -625,18 +652,22 @@
                     </div>
                 </div>
 
-                <div class="phase">
+                <div class="phase progress">
                     <div class="phase-card">
                         <div class="phase-top">
                             <h3>Phase 1 — Roles &amp; Access</h3>
-                            <span class="status planned">Planned</span>
+                            <span class="status progress">In Progress</span>
                         </div>
                         <p class="desc">4 login types aur permission system.</p>
                         <ul>
-                            <li>Admin, Owner, Delivery Boy, Customer auth guards</li>
-                            <li>Role &amp; permission management (spatie/permission style)</li>
-                            <li>Owner onboarding + KYC approval workflow</li>
-                            <li>Admin Users module</li>
+                            <li>Admin, Store, Captain, Customer account types (single <code>users</code> table + <code>role</code> column — see Tech Notes)</li>
+                            <li>Role &amp; Permission module (<code>spatie/laravel-permission</code>) — custom Admin roles, granular permissions, Super Admin bypass</li>
+                            <li>Permission-driven sidebar menu (config-defined, DB-driven visibility)</li>
+                            <li>Separate <code>stores</code> table (1-1 with <code>users</code>) + <code>store_id</code> on <code>users</code> linking a Captain to their parent Store</li>
+                            <li>Admin-side Store registration (KYC: Aadhaar/PAN/license/GST) + approve/reject workflow</li>
+                            <li>Admin-side Captain registration, linked to an approved Store</li>
+                            <li><strong>Pending:</strong> Customer self-registration + OTP-based login — separate from the above, not built yet</li>
+                            <li><strong>Pending:</strong> Mobile OTP verification (static <strong>123456</strong> when <code>APP_ENV=local</code>) — mechanism defined, not wired to a real signup flow yet</li>
                         </ul>
                     </div>
                 </div>
@@ -651,7 +682,7 @@
                         <ul>
                             <li>Products, Substitute Products</li>
                             <li>Categories, Category Groups, Tags</li>
-                            <li>Per-Owner stock management (batch/expiry)</li>
+                            <li>Per-Store stock management (batch/expiry)</li>
                             <li>Rx flag (requires_prescription) per product</li>
                         </ul>
                     </div>
@@ -665,10 +696,13 @@
                         </div>
                         <p class="desc">Fast Delivery vs Expected Delivery Date logic.</p>
                         <ul>
-                            <li>Owner geo-location + radius setup</li>
-                            <li>Customer location capture &amp; geocoding</li>
+                            <li>Store geo-location (lat/long) — Google Maps picker live on the registration form, with a "Use my current location" (browser geolocation) button, and manual lat/long inputs as fallback if the map itself can't load</li>
+                            <li>Delivery radius (km) + speed (kmph) per Store — both <strong>optional</strong>; a Store can skip both and rely entirely on a future delivery-partner integration</li>
+                            <li>OTP-verified customer location capture (lat/long) &amp; geocoding</li>
                             <li>Nearest-store + radius matching (Haversine)</li>
-                            <li>Fallback SLA / expected delivery date engine</li>
+                            <li><strong>Fast Delivery is derived, not a manual flag:</strong> ETA = distance ÷ Store's speed; badge shows only if ETA is under a configurable threshold</li>
+                            <li>Fallback SLA / expected delivery date engine — for Stores without radius/speed, or when the customer is outside every Store's radius</li>
+                            <li><strong>Future:</strong> third-party delivery-partner API for out-of-radius orders — not started, vendor not chosen yet</li>
                         </ul>
                     </div>
                 </div>
@@ -683,7 +717,7 @@
                         <ul>
                             <li>Cart, Coupons &amp; Offers</li>
                             <li>Order lifecycle (placed → accepted → dispatched → delivered)</li>
-                            <li>Delivery Boy assignment &amp; live status updates</li>
+                            <li>Captain assignment &amp; live status updates</li>
                             <li>Order tracking for customer</li>
                         </ul>
                     </div>
@@ -697,10 +731,11 @@
                         </div>
                         <p class="desc">Rx compliance end-to-end.</p>
                         <ul>
-                            <li>Prescription upload at checkout</li>
-                            <li>Owner/Admin verification queue</li>
-                            <li>Approve / Reject + re-upload flow</li>
-                            <li>Audit trail per order</li>
+                            <li>Prescription upload + OTP-verified mobile &amp; location capture</li>
+                            <li>Store review queue — mark available medicines / suggest substitutes</li>
+                            <li>In-app chat: Store ↔ Customer communication before confirming order</li>
+                            <li>Customer confirmation → order finalize → dispatch</li>
+                            <li>Audit trail (prescription + chat log) per order</li>
                         </ul>
                     </div>
                 </div>
@@ -748,10 +783,18 @@
                 <h2>Tech Notes</h2>
             </div>
             <div class="stack-note">
-                <strong>RBAC:</strong> <code>spatie/laravel-permission</code> se Admin ke andar custom roles/permissions banaye ja sakte hain.
-                &nbsp;·&nbsp; <strong>Multi-guard auth:</strong> Owner, Delivery Boy, Customer ke liye separate guards/tables ya ek <code>users</code> table + <code>role</code> column, use-case ke hisaab se decide karein.
-                &nbsp;·&nbsp; <strong>Geo queries:</strong> MySQL <code>ST_Distance_Sphere</code> ya raw Haversine query se nearest-Owner + radius match nikala ja sakta hai.
+                <strong>Roles &amp; Permissions:</strong> <code>users.role</code> enum (<code>admin</code>/<code>store</code>/<code>captain</code>/<code>customer</code>) account-type ke liye rehta hai; iske upar <code>spatie/laravel-permission</code> se Admin ke andar fine-grained roles (Super Admin, Store Manager, …) aur permissions banti hain. Ek <code>Gate::before()</code> hook Super Admin ko har check me bypass deta hai. Ek role Admin, Customer ya Captain accounts ko assign ho sakta hai — Store deliberately excluded hai (uske apne staff permissions ek alag concern honge).
+                &nbsp;·&nbsp; <strong>Menu:</strong> Sidebar ek code-defined config (<code>config/adminmenu.php</code>) se render hota hai, har item ek permission slug se tagged — DB me sirf roles/permissions ka data hai, menu <em>structure</em> nahi. Naya module add karne par sirf config me entry + permission seed karna hota hai; koi menu-builder UI nahi.
+                &nbsp;·&nbsp; <strong>Google Maps:</strong> <code>GOOGLE_MAPS_API_KEY</code> <code>.env</code> me set hai, <code>config('services.google_maps.key')</code> se expose hota hai. Store registration ka map picker isse graceful-degrade karta hai — key missing ho to plain lat/long inputs dikhte hain, aur key runtime pe reject ho (billing/API-not-enabled/referrer restriction) to <code>gm_authFailure</code> hook broken map hide karke wahi fallback message dikha deta hai. "Use my current location" button (browser geolocation) map ke saath ya uske bina bhi kaam karta hai.
+                &nbsp;·&nbsp; <strong>Store data model:</strong> Store-specific fields (shop name, license/GST, lat/long, radius, speed, approval status) ek alag <code>stores</code> table me hain (1-1 with <code>users</code> via <code>user_id</code>) — <code>users</code> khud sirf shared identity/login fields rakhta hai, taki Admin/Captain/Customer rows par ye sab always-null columns na aaye.
+                &nbsp;·&nbsp; <strong>Store ↔ Captain link:</strong> <code>users</code> table par nullable <code>store_id</code> (self-referencing) column hai — ek Captain isi column se apni parent Store se linked hota hai; Admin is column ke bina bhi sabko dekh/edit kar sakta hai.
+                &nbsp;·&nbsp; <strong>Address:</strong> purana <code>address</code> integer column (locations tree ka reference) sirf ek-do cities me hi locality-level data hone ki wajah se general address ke liye kaam nahi karta — ek naya <code>address_line</code> text column real postal address store karta hai; <code>address</code> ab nullable hai, unused reh gaya hai.
+                &nbsp;·&nbsp; <strong>Multi-guard auth:</strong> Store, Captain, Customer ke liye separate guards/tables ya ek <code>users</code> table + <code>role</code> column, use-case ke hisaab se decide karein.
+                &nbsp;·&nbsp; <strong>Admin tables:</strong> Har admin listing screen (Roles, Stores, Captains, …) server-side <code>yajra/laravel-datatables-oracle</code> se render hoti hai, horizontal-scroll variant — plain Blade tables nahi.
+                &nbsp;·&nbsp; <strong>Geo queries:</strong> MySQL <code>ST_Distance_Sphere</code> ya raw Haversine query se nearest-Store + radius match nikala ja sakta hai.
                 &nbsp;·&nbsp; <strong>File storage:</strong> Prescription uploads ke liye <code>storage/app/prescriptions</code> (private disk) + signed URLs for review.
+                &nbsp;·&nbsp; <strong>OTP:</strong> <code>APP_ENV=local</code> par static OTP <code>123456</code> return karein (koi SMS gateway call nahi); staging/production me real gateway (MSG91 / Twilio) se bhejein aur rate-limit lagayein.
+                &nbsp;·&nbsp; <strong>Store ↔ Customer chat:</strong> ek lightweight <code>order_messages</code> / <code>prescription_messages</code> table se text (aur optional image) messages, order/prescription se linked.
             </div>
         </div>
     </section>

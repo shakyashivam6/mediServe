@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
      * Run the database seeds.
      *
      * Creates one user per role defined on the `users` table
-     * (admin, store, customer, distributer) so every role can be
+     * (admin, store, customer, captain) so every role can be
      * logged into and tested straight after a fresh migrate.
      */
     public function run(): void
@@ -22,12 +22,13 @@ class UserSeeder extends Seeder
             [
                 'first_name' => 'Mukesh',
                 'second_name' => 'Shakya',
+                'login_id' => 'MS0001',
                 'mobile' => '9898989898',
                 'adhaar' => '100000000001',
                 'pan' => 'ABCPA0001A',
                 'email' => 'admin@mediserve.test',
                 'gender' => 'male',
-                'otp' => '000000',
+                'otp' => '123456',
                 'dob' => '1990-01-01',
                 'city' => 41,
                 'state' => 34,
@@ -40,12 +41,13 @@ class UserSeeder extends Seeder
             [
                 'first_name' => 'Abhishek',
                 'second_name' => 'Shakya',
+                'login_id' => 'MS0002',
                 'mobile' => '9595959595',
                 'adhaar' => '100000000002',
                 'pan' => 'ABCPA0002B',
                 'email' => 'store@mediserve.test',
                 'gender' => 'male',
-                'otp' => '000000',
+                'otp' => '123456',
                 'dob' => '1990-01-02',
                 'city' => 41,
                 'state' => 34,
@@ -56,32 +58,34 @@ class UserSeeder extends Seeder
                 'password' => '123456',
             ],
             [
-                'first_name' => 'Distributer',
+                'first_name' => 'Captain',
                 'second_name' => 'User',
+                'login_id' => 'MS0003',
                 'mobile' => '9292929292',
                 'adhaar' => '100000000003',
                 'pan' => 'ABCPA0003C',
-                'email' => 'distributer@mediserve.test',
+                'email' => 'captain@mediserve.test',
                 'gender' => 'female',
-                'otp' => '000000',
+                'otp' => '123456',
                 'dob' => '1990-01-03',
                 'city' => 41,
                 'state' => 34,
                 'pincode' => 226001,
                 'address' => 3,
-                'role' => 'distributer',
+                'role' => 'captain',
                 'isActive' => true,
                 'password' => '123456',
             ],
             [
                 'first_name' => 'Customer',
                 'second_name' => 'User',
+                'login_id' => 'MS0004',
                 'mobile' => '9000000004',
                 'adhaar' => '100000000004',
                 'pan' => 'ABCPA0004D',
                 'email' => 'customer@mediserve.test',
                 'gender' => 'other',
-                'otp' => '000000',
+                'otp' => '123456',
                 'dob' => '1990-01-04',
                 'city' => 41,
                 'state' => 34,
@@ -94,13 +98,20 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            User::updateOrCreate(
+            $model = User::updateOrCreate(
                 ['mobile' => $user['mobile']],
                 array_merge($user, [
                     'password' => Hash::make($user['password']),
                     'email_verified_at' => now(),
                 ])
             );
+
+            // The seeded admin account is the platform's first Super Admin —
+            // real sub-admin roles (Store Manager, Support Admin, ...) get
+            // assigned later from the Roles & Permissions screen.
+            if ($user['role'] === 'admin') {
+                $model->syncRoles('Super Admin');
+            }
         }
     }
 }

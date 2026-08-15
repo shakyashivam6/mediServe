@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('first_name');
             $table->string('second_name');
+            $table->string('login_id')->unique(); 
             $table->string('mobile')->unique();
             $table->string('adhaar');
             $table->string('pan');
@@ -26,7 +27,7 @@ return new class extends Migration
             $table->integer('state');
             $table->integer('pincode');
             $table->integer('address');
-            $table->enum('role', ['admin', 'store', 'customer', 'distributer']);
+            $table->enum('role', ['admin', 'store', 'customer', 'captain']);
             $table->boolean('isActive');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

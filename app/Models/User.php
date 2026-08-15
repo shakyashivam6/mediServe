@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'first_name',
     'second_name',
+    'login_id',
     'mobile',
     'adhaar',
     'pan',
@@ -24,15 +26,19 @@ use Illuminate\Notifications\Notifiable;
     'state',
     'pincode',
     'address',
+    'address_line',
     'role',
+    'store_id',
+    'vehicle_type',
     'isActive',
     'password',
+    'email_verified_at',
 ])]
 #[Hidden(['password', 'remember_token', 'otp'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * Get the attributes that should be cast.
@@ -47,5 +53,45 @@ class User extends Authenticatable
             'dob' => 'date',
             'isActive' => 'boolean',
         ];
+    }
+
+    /**
+     * The Store profile for this user, when role=store.
+     */
+    public function store()
+    {
+        return $this->hasOne(Store::class);
+    }
+
+    /**
+     * The Store (another User, role=store) this Captain delivers for.
+     */
+    public function parentStore()
+    {
+        return $this->belongsTo(User::class, 'store_id');
+    }
+
+    /**
+     * This Store's own Captains, when role=store.
+     */
+    public function captains()
+    {
+        return $this->hasMany(User::class, 'store_id');
+    }
+
+    /**
+     * Next sequential login_id in the "MS0001" format already used by the
+     * seeded accounts (see UserSeeder). Scans existing login_ids rather
+     * than tracking a counter so it stays correct even if rows are deleted.
+     */
+    public static function generateLoginId(): string
+    {
+        $lastNumber = static::query()
+            ->where('login_id', 'like', 'MS%')
+            ->pluck('login_id')
+            ->map(fn (string $loginId) => (int) substr($loginId, 2))
+            ->max() ?? 0;
+
+        return 'MS'.str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
     }
 }
