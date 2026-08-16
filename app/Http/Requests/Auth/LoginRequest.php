@@ -42,7 +42,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (!Auth::attempt($this->only('login_id', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($this->only('login_id', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -51,6 +51,19 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        // Credentials were correct, but the account itself is inactive —
+        // most commonly a Store still pending (or rejected on) Admin's KYC
+        // approval, or any account Admin has deactivated. "Login stays
+        // inactive until approved" is the documented behaviour for Store
+        // registration; this is what actually enforces it.
+        if (! Auth::user()->isActive) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'login_id' => 'Your account is not active yet. Please wait for admin approval, or contact support.',
+            ]);
+        }
     }
 
     /**
@@ -60,7 +73,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -81,6 +94,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('login_id')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->string('login_id')).'|'.$this->ip());
     }
 }

@@ -16,11 +16,13 @@ use Spatie\Permission\Traits\HasRoles;
     'second_name',
     'login_id',
     'mobile',
+    'alternate_mobile',
     'adhaar',
     'pan',
     'email',
     'gender',
     'otp',
+    'otp_expires_at',
     'dob',
     'city',
     'state',
@@ -38,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -52,6 +54,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'dob' => 'date',
             'isActive' => 'boolean',
+            'otp_expires_at' => 'datetime',
         ];
     }
 
@@ -77,6 +80,31 @@ class User extends Authenticatable
     public function captains()
     {
         return $this->hasMany(User::class, 'store_id');
+    }
+
+    /**
+     * Prescriptions this Customer has uploaded, when role=customer.
+     */
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class, 'user_id');
+    }
+
+    /**
+     * Prescriptions this Store has claimed/is handling, when role=store.
+     */
+    public function handledPrescriptions()
+    {
+        return $this->hasMany(Prescription::class, 'store_id');
+    }
+
+    /**
+     * Prescriptions this Captain has been assigned to deliver, when
+     * role=captain.
+     */
+    public function assignedPrescriptions()
+    {
+        return $this->hasMany(Prescription::class, 'captain_id');
     }
 
     /**

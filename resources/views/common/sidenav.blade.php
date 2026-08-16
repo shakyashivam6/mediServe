@@ -93,15 +93,26 @@
 
         {{--
         Sidenav Menu — rendered from config/adminmenu.php, not hardcoded.
-        Each leaf item carries a permission slug; a null permission means
-        "visible to any logged-in Admin" (e.g. Dashboard). A group with
-        children hides itself once none of its children pass their check —
-        see config/adminmenu.php for how to add a new module.
+        That one file holds the Admin, Store and Captain menus; which array
+        renders here depends purely on the logged-in account's role, which
+        is what keeps the menus separate — a Store/Captain account never
+        sees Admin items and vice versa, regardless of any permission it
+        holds. Each leaf item carries a permission slug; a null permission
+        means "visible to any logged-in user of that menu" (e.g. Dashboard).
+        A group with children hides itself once none of its children pass
+        their check — see config/adminmenu.php for how to add a new module.
         --}}
+        @php
+            $sidenavMenu = config('adminmenu.' . (in_array(auth()->user()->role, ['store', 'captain']) ? auth()->user()->role : 'admin'), []);
+            // Store/Captain only (see NotificationController) — Admin never
+            // gets a PrescriptionEventNotification fired at it, so this is
+            // always 0 there and the badge just never renders.
+            $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
+        @endphp
         <ul class="side-nav">
             <li class="side-nav-title">Navigation</li>
 
-            @foreach (config('adminmenu') as $item)
+            @foreach ($sidenavMenu as $item)
                 @if (isset($item['children']))
                     @php
                         $visibleChildren = collect($item['children'])->filter(
@@ -134,6 +145,9 @@
                         <a href="{{ route($item['route']) }}" class="side-nav-link">
                             <span class="menu-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <span class="menu-text"> {{ $item['label'] }} </span>
+                            @if ($item['label'] === 'Dashboard' && $unreadNotificationCount > 0)
+                                <span class="badge bg-danger rounded-pill">{{ $unreadNotificationCount }}</span>
+                            @endif
                         </a>
                     </li>
                 @endif

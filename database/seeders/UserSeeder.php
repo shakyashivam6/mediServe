@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -111,6 +110,27 @@ class UserSeeder extends Seeder
             // assigned later from the Roles & Permissions screen.
             if ($user['role'] === 'admin') {
                 $model->syncRoles('Super Admin');
+            }
+
+            // A role=store User is always paired with a `stores` row in the
+            // real signup flow (Admin\StoreController creates both
+            // together) — this seeded account needs the same pairing, or
+            // every Store-panel screen (which reads $user->store) 404s/500s
+            // on it. Pre-approved so the seeded login is immediately usable.
+            if ($user['role'] === 'store') {
+                $model->store()->updateOrCreate(
+                    ['user_id' => $model->id],
+                    [
+                        'shop_name' => 'MediServe Demo Pharmacy',
+                        'license_no' => 'DL-DEMO-0001',
+                        'gst_no' => null,
+                        'latitude' => null,
+                        'longitude' => null,
+                        'delivery_radius_km' => null,
+                        'delivery_speed_kmph' => null,
+                        'status' => 'approved',
+                    ]
+                );
             }
         }
     }

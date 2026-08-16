@@ -385,6 +385,7 @@
                 <a href="#logic">Core Logic</a>
                 <a href="#modules">Modules</a>
                 <a href="#timeline">Timeline</a>
+                <a href="{{ route('customer-requirements') }}">Customer Requirements →</a>
             </div>
         </div>
     </nav>
@@ -412,7 +413,7 @@
             <div class="section-head">
                 <div class="kicker">Access Model</div>
                 <h2>4 Types of Logins</h2>
-                <p>Har role ka apna dashboard aur permission scope hoga. Admin aur Store dono panel-based hai, Captain (delivery staff, apni Store ke andar bana hua) ek lightweight app/PWA, aur Customer ka apna storefront + app. Customer site par seedhe aakar <strong>self-signup</strong> karta hai aur <strong>OTP-based login</strong> use karta hai (no password) — Store aur Captain ke liye abhi koi public signup nahi hai, dono Admin panel se create hote hain.</p>
+                <p>Har role ka apna dashboard aur permission scope hoga. Admin, Store aur Captain teeno ab panel-based hain (Captain ka apna <code>/captain/...</code> panel bhi ban chuka hai — ek lightweight app/PWA future me ek alag decision hai, filhaal responsive web panel hi hai), aur Customer ka apna storefront + app. Customer site par seedhe aakar <strong>self-signup</strong> karta hai aur <strong>OTP-based login</strong> use karta hai (no password) — Store aur Captain ke liye abhi koi public signup nahi hai, dono Admin/Store panel se create hote hain.</p>
             </div>
             <div class="role-grid">
 
@@ -444,12 +445,14 @@
                         <h3>Store</h3>
                     </div>
                     <ul>
-                        <li>Store profile: shop name, license/GST, KYC (Aadhaar/PAN), location (lat/long)</li>
+                        <li>Own login-in dashboard (<code>/store/dashboard</code>) — separate layout from Admin, built</li>
+                        <li>Store profile: shop name, license/GST, location (lat/long) self-editable; KYC (Aadhaar/PAN) stays Admin-only after approval</li>
                         <li>Delivery radius (km) + speed (kmph) — both optional; skipping both means relying on a future delivery-partner integration for all orders</li>
                         <li>Stock / inventory management (batch &amp; expiry tracking)</li>
-                        <li>Register &amp; manage own Captains (delivery staff)</li>
-                        <li>Receive, accept &amp; prepare Orders; assign to own Captains</li>
-                        <li>Examine uploaded prescriptions, mark available medicines/substitutes, and chat with customer before proceeding</li>
+                        <li>Register &amp; manage own Captains (delivery staff) — built, locked until the Store itself is approved</li>
+                        <li>Shared Prescriptions queue — claim an unclaimed upload, view files/remark/delivery location, log the voice call, post a priced estimate, and assign one of your own Captains once the Customer accepts — built</li>
+                        <li>Prepaid/COD chosen per order at Captain assignment; COD Settlements screen shows what each Captain is holding and lets the Store clear it once physically handed back — built</li>
+                        <li>Receive, accept &amp; prepare full Orders (once Cart/Checkout exists) — not built yet</li>
                         <li>Store-level sales reports &amp; earnings</li>
                     </ul>
                 </div>
@@ -461,12 +464,13 @@
                         <h3>Captain</h3>
                     </div>
                     <ul>
-                        <li>Created &amp; managed by their Store (not directly by Admin)</li>
+                        <li>Created &amp; managed by their Store (not directly by Admin) — built</li>
+                        <li>Own login-in panel (<code>/captain/dashboard</code>) — built, first ships with this feature; previously a Captain account had nowhere of its own to log into</li>
+                        <li>"To Deliver" queue, scoped to Prescriptions assigned to them, with a Maps link per order — built</li>
+                        <li>One-tap "Mark Delivered" — doubles as cash collection for COD orders (collecting genuinely happens at the door) — built</li>
+                        <li>My Collections report: cash currently in hand (collected, not yet settled), lifetime settled total, and a day-by-day delivered-orders list — built</li>
                         <li>Online / offline availability toggle</li>
-                        <li>Assigned order queue, scoped to their Store's orders, with navigation</li>
-                        <li>Status updates: Picked up → Out for delivery → Delivered</li>
-                        <li>Proof of delivery (OTP / signature / photo)</li>
-                        <li>COD collection &amp; reconciliation</li>
+                        <li>Proof of delivery (OTP / signature / photo) — delivery itself is a single "Mark Delivered" tap today, no separate Picked-up/Out-for-delivery sub-states or signature capture yet</li>
                         <li>Earnings / incentive summary</li>
                     </ul>
                 </div>
@@ -478,15 +482,18 @@
                         <h3>Customer</h3>
                     </div>
                     <ul>
-                        <li>Self-registers directly on the site/app; login is <strong>OTP-based</strong> (no password)</li>
-                        <li>Saved addresses + live GPS location</li>
-                        <li>Browse categories/products, search medicines &amp; substitutes</li>
+                        <li>Self-registers directly on the site/app; login is <strong>OTP-based</strong> (no password) — built</li>
+                        <li>First action after login: upload a prescription (photo/PDF) + remark + delivery address, optionally sharing live GPS location — built</li>
+                        <li>See the Store's priced estimate on their own panel and Accept/Reject it — built</li>
+                        <li>Saved addresses (today it's one-off delivery address per upload, typed each time)</li>
+                        <li>Browse categories/products, search medicines &amp; substitutes, cart/checkout — not built yet; this Phase went prescription-first instead of storefront-first</li>
                         <li>See <strong>Fast Delivery</strong> or <strong>Expected Delivery Date</strong> per location</li>
-                        <li>OTP-verified mobile number + live lat/long for prescription orders &amp; delivery matching</li>
-                        <li>Upload prescription copy &amp; chat with Store to confirm available medicines</li>
-                        <li>Cart, coupons, checkout, live order tracking</li>
-                        <li>Reviews, Health Articles, Notifications</li>
+                        <li>Chat with Store to confirm available medicines — a phone call + the Store's posted estimate cover this for now</li>
+                        <li>Coupons, live order tracking, Reviews, Health Articles, Notifications</li>
                     </ul>
+                    <p style="margin: 0; font-size: 12.5px;">
+                        <a href="{{ route('customer-requirements') }}" style="color: var(--blue); font-weight: 600; text-decoration: none;">Full requirements draft →</a>
+                    </p>
                 </div>
 
             </div>
@@ -666,24 +673,28 @@
                             <li>Separate <code>stores</code> table (1-1 with <code>users</code>) + <code>store_id</code> on <code>users</code> linking a Captain to their parent Store</li>
                             <li>Admin-side Store registration (KYC: Aadhaar/PAN/license/GST) + approve/reject workflow</li>
                             <li>Admin-side Captain registration, linked to an approved Store</li>
-                            <li><strong>Pending:</strong> Customer self-registration + OTP-based login — separate from the above, not built yet</li>
-                            <li><strong>Pending:</strong> Mobile OTP verification (static <strong>123456</strong> when <code>APP_ENV=local</code>) — mechanism defined, not wired to a real signup flow yet</li>
+                            <li>Store's own self-service panel — separate login-in dashboard (<code>/store/...</code>, own layout) for a Store account: edit own shop profile, manage own Captains. Reuses the same <code>config/adminmenu.php</code> file as Admin, gated by account role rather than a new config</li>
+                            <li>Captain's own panel (<code>/captain/...</code>) — same pattern as Store's, own layout, same shared <code>config/adminmenu.php</code> file split by role. Fixed the post-login redirect too: a Captain used to fall through to the Admin dashboard view (nothing else existed for it) — it now lands on its own panel, both from password login and a stale <code>/login</code>/<code>/dashboard</code> bookmark</li>
+                            <li>Login now enforces <code>isActive</code> — a pending/rejected/deactivated account can't sign in at all, matching "login stays inactive until approved"</li>
+                            <li>Customer self-registration + OTP-based login — built. One form (name + mobile) doubles as signup and login; static <strong>123456</strong> when <code>APP_ENV=local</code>, a real random code (logged, not sent) otherwise since no SMS gateway is wired yet</li>
+                            <li><strong>Pending:</strong> Production SMS gateway to actually deliver the OTP outside local/dev (vendor not chosen — see <a href="{{ route('customer-requirements') }}#decisions">Open Decisions</a>)</li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="phase">
+                <div class="phase progress">
                     <div class="phase-card">
                         <div class="phase-top">
                             <h3>Phase 2 — Catalog &amp; Inventory</h3>
-                            <span class="status planned">Planned</span>
+                            <span class="status progress">In Progress</span>
                         </div>
                         <p class="desc">Product data model jo pura storefront drive karega.</p>
                         <ul>
-                            <li>Products, Substitute Products</li>
-                            <li>Categories, Category Groups, Tags</li>
-                            <li>Per-Store stock management (batch/expiry)</li>
-                            <li>Rx flag (requires_prescription) per product</li>
+                            <li>Master <code>products</code> table + Admin &gt; Products list (server-side DataTable) — built</li>
+                            <li>Bulk import from CSV/XLSX (<code>maatwebsite/excel</code>) — item_id, drug name, composition, manufacturer, mrp, price, packaging, use of medicine, up to 10 image URLs; upserts on <code>item_id</code> so re-uploading updates instead of duplicating — built</li>
+                            <li>Rx flag (<code>requires_prescription</code>) + active/inactive per product — quick toggle from the list, built</li>
+                            <li><strong>Pending:</strong> Substitute Products, Categories, Category Groups, Tags</li>
+                            <li><strong>Pending:</strong> Per-Store stock management (batch/expiry) — separate table referencing <code>products</code></li>
                         </ul>
                     </div>
                 </div>
@@ -723,19 +734,29 @@
                     </div>
                 </div>
 
-                <div class="phase">
+                <div class="phase progress">
                     <div class="phase-card">
                         <div class="phase-top">
                             <h3>Phase 5 — Prescription Workflow</h3>
-                            <span class="status planned">Planned</span>
+                            <span class="status progress">In Progress</span>
                         </div>
-                        <p class="desc">Rx compliance end-to-end.</p>
+                        <p class="desc">MVP shipped: a scoped-down slice, prescription-first rather than storefront-first — no cart/browse needed before this. Full spec still in <a href="{{ route('customer-requirements') }}#prescription">customer-requirements</a>.</p>
                         <ul>
-                            <li>Prescription upload + OTP-verified mobile &amp; location capture</li>
-                            <li>Store review queue — mark available medicines / suggest substitutes</li>
-                            <li>In-app chat: Store ↔ Customer communication before confirming order</li>
-                            <li>Customer confirmation → order finalize → dispatch</li>
-                            <li>Audit trail (prescription + chat log) per order</li>
+                            <li>Prescription upload (image/PDF, multiple files) + remark + delivery address + optional GPS location — built, Customer-side</li>
+                            <li>Shared-queue Store routing — every upload is visible to all approved Stores; whichever opens it first claims it (no radius-matching dependency, since Stores don't reliably have lat/long yet) — built</li>
+                            <li>Store review screen: distance/ETA from the claimed Store when both sides have coordinates, plus a Google Maps link + WhatsApp share so a Store can hand the location to <em>any</em> Captain — in-app or not — built</li>
+                            <li>Voice call is out-of-band (an actual phone call) — the Store just logs call notes + timestamp in the software afterward — built</li>
+                            <li>Store submits a priced estimate (medicine lines + total) directly on the Prescription — no separate Orders table yet — built</li>
+                            <li>Customer accept/reject on their own panel, <em>or</em> the Store records the same verbally-agreed outcome from the call — built</li>
+                            <li>Captain assignment (from the Store's own Captains) is gated on the Customer's acceptance — never dispatched before that — built</li>
+                            <li>Prepaid/COD chosen at Captain assignment; a COD order flashes "pay on delivery" to the Customer and a pending badge to the Store until the Captain marks it collected — built</li>
+                            <li>Captain's own panel (<code>/captain/...</code>) — "To Deliver" queue, one-tap Mark Delivered that doubles as COD cash collection, and a "My Collections" report (cash in hand, lifetime settled, day-by-day delivered list) — built, first thing a Captain account can log into</li>
+                            <li>Store's COD Settlements screen — cash each Captain is currently holding, grouped by Captain, with a one-click "Mark Settled" once physically handed back — built</li>
+                            <li>In-app chat, text-only — both sides see it on the Prescription page with a manual Refresh button plus an opt-in "Auto-refresh (10s)" toggle; no live push, this is a polling pull, not sockets — built</li>
+                            <li>In-app notifications, Store/Captain/Customer — one database-backed notification per lifecycle event (new request in queue, claimed, estimate sent, accepted/rejected, Captain assigned, delivered, COD settled, new chat message); shows as a bell-icon dropdown (Store/Captain topbar, Customer's own bell) with an unread badge, plus the same unread count as a red pill next to "Dashboard" in the sidenav (Customer: next to "My Prescriptions", no sidebar there) — built. Admin isn't wired in (out of scope)</li>
+                            <li><strong>Pending:</strong> Image attachments in chat — text-only for now</li>
+                            <li><strong>Pending:</strong> Admin compliance audit view across all Stores' Prescriptions</li>
+                            <li><strong>Pending:</strong> A real Orders table once Cart/Checkout (Phase 4) exists — today "confirmed" lives on the Prescription itself</li>
                         </ul>
                     </div>
                 </div>
@@ -750,7 +771,7 @@
                         <ul>
                             <li>Reviews &amp; ratings moderation</li>
                             <li>Banners, Health Articles, Content pages</li>
-                            <li>Notifications (order + marketing)</li>
+                            <li>Order-lifecycle in-app notifications — built early, see Phase 5. Marketing/broadcast notifications still planned</li>
                             <li>Careers (Web)</li>
                         </ul>
                     </div>
@@ -785,16 +806,21 @@
             <div class="stack-note">
                 <strong>Roles &amp; Permissions:</strong> <code>users.role</code> enum (<code>admin</code>/<code>store</code>/<code>captain</code>/<code>customer</code>) account-type ke liye rehta hai; iske upar <code>spatie/laravel-permission</code> se Admin ke andar fine-grained roles (Super Admin, Store Manager, …) aur permissions banti hain. Ek <code>Gate::before()</code> hook Super Admin ko har check me bypass deta hai. Ek role Admin, Customer ya Captain accounts ko assign ho sakta hai — Store deliberately excluded hai (uske apne staff permissions ek alag concern honge).
                 &nbsp;·&nbsp; <strong>Menu:</strong> Sidebar ek code-defined config (<code>config/adminmenu.php</code>) se render hota hai, har item ek permission slug se tagged — DB me sirf roles/permissions ka data hai, menu <em>structure</em> nahi. Naya module add karne par sirf config me entry + permission seed karna hota hai; koi menu-builder UI nahi.
+                &nbsp;·&nbsp; <strong>Store panel:</strong> <code>config/adminmenu.php</code> ke andar ek alag <code>'store'</code> array hai (same file, "same menu file" — koi doosra config nahi) — <code>resources/views/common/sidenav.blade.php</code> logged-in account ke <code>role</code> ke hisaab se <code>'admin'</code> ya <code>'store'</code> array choose karta hai, isliye dono menu completely separate rehte hain. Layout bhi alag hai (<code>components/layouts/store-layout.blade.php</code>, same HighDmin theme). Routes <code>/store/...</code> prefix ke peeche <code>account_role:store</code> middleware (<code>App\Http\Middleware\EnsureAccountRole</code>) se gated hain — Spatie <code>permission:</code> nahi, kyunki Store accounts Spatie roles se deliberately excluded hain.
                 &nbsp;·&nbsp; <strong>Google Maps:</strong> <code>GOOGLE_MAPS_API_KEY</code> <code>.env</code> me set hai, <code>config('services.google_maps.key')</code> se expose hota hai. Store registration ka map picker isse graceful-degrade karta hai — key missing ho to plain lat/long inputs dikhte hain, aur key runtime pe reject ho (billing/API-not-enabled/referrer restriction) to <code>gm_authFailure</code> hook broken map hide karke wahi fallback message dikha deta hai. "Use my current location" button (browser geolocation) map ke saath ya uske bina bhi kaam karta hai.
                 &nbsp;·&nbsp; <strong>Store data model:</strong> Store-specific fields (shop name, license/GST, lat/long, radius, speed, approval status) ek alag <code>stores</code> table me hain (1-1 with <code>users</code> via <code>user_id</code>) — <code>users</code> khud sirf shared identity/login fields rakhta hai, taki Admin/Captain/Customer rows par ye sab always-null columns na aaye.
                 &nbsp;·&nbsp; <strong>Store ↔ Captain link:</strong> <code>users</code> table par nullable <code>store_id</code> (self-referencing) column hai — ek Captain isi column se apni parent Store se linked hota hai; Admin is column ke bina bhi sabko dekh/edit kar sakta hai.
                 &nbsp;·&nbsp; <strong>Address:</strong> purana <code>address</code> integer column (locations tree ka reference) sirf ek-do cities me hi locality-level data hone ki wajah se general address ke liye kaam nahi karta — ek naya <code>address_line</code> text column real postal address store karta hai; <code>address</code> ab nullable hai, unused reh gaya hai.
                 &nbsp;·&nbsp; <strong>Multi-guard auth:</strong> Store, Captain, Customer ke liye separate guards/tables ya ek <code>users</code> table + <code>role</code> column, use-case ke hisaab se decide karein.
-                &nbsp;·&nbsp; <strong>Admin tables:</strong> Har admin listing screen (Roles, Stores, Captains, …) server-side <code>yajra/laravel-datatables-oracle</code> se render hoti hai, horizontal-scroll variant — plain Blade tables nahi.
-                &nbsp;·&nbsp; <strong>Geo queries:</strong> MySQL <code>ST_Distance_Sphere</code> ya raw Haversine query se nearest-Store + radius match nikala ja sakta hai.
-                &nbsp;·&nbsp; <strong>File storage:</strong> Prescription uploads ke liye <code>storage/app/prescriptions</code> (private disk) + signed URLs for review.
-                &nbsp;·&nbsp; <strong>OTP:</strong> <code>APP_ENV=local</code> par static OTP <code>123456</code> return karein (koi SMS gateway call nahi); staging/production me real gateway (MSG91 / Twilio) se bhejein aur rate-limit lagayein.
-                &nbsp;·&nbsp; <strong>Store ↔ Customer chat:</strong> ek lightweight <code>order_messages</code> / <code>prescription_messages</code> table se text (aur optional image) messages, order/prescription se linked.
+                &nbsp;·&nbsp; <strong>Admin tables:</strong> Har admin listing screen (Roles, Stores, Captains, Products, …) server-side <code>yajra/laravel-datatables-oracle</code> se render hoti hai, horizontal-scroll variant — plain Blade tables nahi.
+                &nbsp;·&nbsp; <strong>Catalog import:</strong> <code>maatwebsite/excel</code> (v4, PhpSpreadsheet ke upar) se Admin &gt; Products &gt; Import CSV/XLSX upload leta hai. <code>App\Imports\MedicineImport</code> chunked/batched read karta hai aur <code>item_id</code> par upsert karta hai — same file dobara upload karne se products duplicate nahi hote, update ho jaate hain.
+                &nbsp;·&nbsp; <strong>Geo queries:</strong> PHP-side Haversine (<code>Prescription::haversineKm()</code>) — built, used for the Store↔Customer distance shown on the Prescription review screen. Store-level nearest-store/radius <em>matching</em> (auto-assignment) is still not built — routing today is the shared-queue model (see Phase 5), not radius-based.
+                &nbsp;·&nbsp; <strong>Location sharing:</strong> a plain <code>https://www.google.com/maps?q=lat,long</code> link (no API key needed) plus a <code>wa.me</code> WhatsApp share link — built. This is the "hand the location to a Captain outside the software" mechanism; no Maps JS/geocoding API involved.
+                &nbsp;·&nbsp; <strong>File storage:</strong> Prescription uploads go to the private <code>local</code> disk (<code>storage/app/private/prescriptions/&lt;customer_id&gt;/...</code>) — built. Served through an authenticated streaming route (owner Customer, or the claiming/any unclaimed-viewing Store) rather than signed URLs, since that keeps access tied to a live session instead of a shareable link.
+                &nbsp;·&nbsp; <strong>OTP:</strong> built for Customer login — <code>APP_ENV=local</code> returns static <code>123456</code>; other environments generate a real code and log it (<code>Log::info</code>) rather than send it, since no SMS gateway is wired yet. Rate-limited on request/verify/resend, mirroring the existing password-login <code>RateLimiter</code> pattern.
+                &nbsp;·&nbsp; <strong>Store ↔ Customer chat:</strong> built — <code>prescription_messages</code> table (<code>prescription_id</code>, <code>user_id</code> sender, <code>body</code>), no separate role column since "which side" is just whoever the sender is relative to the Prescription's own <code>user_id</code>/<code>store_id</code>. No sockets/push — each side's Refresh button (or an opt-in 10s auto-toggle) re-fetches a small server-rendered partial and swaps it in. Store side uses jQuery (already bundled in the HighDmin theme's <code>vendor.min.js</code>); Customer side uses plain JS, since its layout deliberately carries no framework at all.
+                &nbsp;·&nbsp; <strong>COD cash flow:</strong> built as a single linear <code>payment_status</code> column on <code>prescriptions</code> — <code>not_required</code> (prepaid) or <code>pending</code> (COD, set together with <code>payment_method</code> at Captain assignment) → <code>collected</code> (Captain got the cash at the door, same tap as Mark Delivered) → <code>settled</code> (Store confirms it physically got that cash back from the Captain — all of a Captain's collected orders at once, not itemised, since that's how a cash hand-off actually happens). No separate ledger/settlement table.
+                &nbsp;·&nbsp; <strong>In-app notifications:</strong> built on Laravel's own <code>Notifiable</code>/database-notification system (<code>notifications</code> table, one generic <code>App\Notifications\PrescriptionEventNotification</code> class reused at every trigger point rather than one class per event) — <code>database</code> channel only, no queue (<code>ShouldQueue</code> not used, fires synchronously, no worker to run). <code>App\Http\Controllers\NotificationController</code> is shared by the Store/Captain/Customer route groups (identical read/mark-read logic, only the view differs). Not wired into Admin — scoped to Store/Captain/Customer only, per how it was asked for.
             </div>
         </div>
     </section>

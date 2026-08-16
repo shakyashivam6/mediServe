@@ -28,7 +28,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Store/Captain accounts land on their own panel, never the Admin
+        // one — Customer never reaches this controller at all (OTP login
+        // via Customer\Auth\OtpAuthController instead). Everyone else
+        // (Admin) keeps the shared /dashboard route.
+        $default = match (Auth::user()->role) {
+            'store' => route('store.dashboard', absolute: false),
+            'captain' => route('captain.dashboard', absolute: false),
+            default => route('dashboard', absolute: false),
+        };
+
+        return redirect()->intended($default);
     }
 
     /**
