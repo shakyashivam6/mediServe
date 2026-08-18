@@ -36,7 +36,7 @@ class DeliveryController extends Controller
             $prescription,
             'Delivered',
             "Your order for prescription #{$prescription->id} has been delivered.",
-            route('customer.prescriptions.show', $prescription),
+            route('customer.prescriptions.show', $prescription, absolute: false),
             'ri-checkbox-circle-line',
             'success',
         ));
@@ -46,7 +46,7 @@ class DeliveryController extends Controller
             $prescription,
             'Order delivered',
             "{$request->user()->first_name} delivered prescription #{$prescription->id}.".$collectedNote,
-            route('store.prescriptions.show', $prescription),
+            route('store.prescriptions.show', $prescription, absolute: false),
             'ri-checkbox-circle-line',
             'success',
         ));

@@ -77,7 +77,7 @@ class CodSettlementController extends Controller
             $pending->first(),
             'COD settlement recorded',
             "{$request->user()->store?->shop_name} marked ₹".number_format((float) $total, 2)." ({$count} order".($count === 1 ? '' : 's').') as settled.',
-            route('captain.collections.index'),
+            route('captain.collections.index', absolute: false),
             'ri-hand-coin-line',
             'success',
         ));

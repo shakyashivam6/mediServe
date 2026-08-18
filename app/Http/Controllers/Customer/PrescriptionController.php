@@ -82,7 +82,7 @@ class PrescriptionController extends Controller
                 $prescription,
                 'New prescription request',
                 "{$request->user()->first_name} uploaded a new prescription — open it to review and claim.",
-                route('store.prescriptions.show', $prescription),
+                route('store.prescriptions.show', $prescription, absolute: false),
                 'ri-file-add-line',
                 'info',
             ));
@@ -123,7 +123,7 @@ class PrescriptionController extends Controller
             $prescription,
             'Customer accepted the estimate',
             "{$request->user()->first_name} accepted the ₹".number_format((float) $prescription->total_amount, 2)." estimate for prescription #{$prescription->id}. You can now assign a Captain.",
-            route('store.prescriptions.show', $prescription),
+            route('store.prescriptions.show', $prescription, absolute: false),
             'ri-thumb-up-line',
             'success',
         ));
@@ -138,21 +138,25 @@ class PrescriptionController extends Controller
 
         abort_unless($prescription->status === 'awaiting_confirmation', 422, 'This prescription has no pending estimate to reject.');
 
+        // Required — a bare "Reject" with no reason left the Store guessing
+        // why (too expensive? found it elsewhere? no longer needed?), which
+        // is exactly the information a Store needs to not repeat the same
+        // outcome on the next call.
         $data = $request->validate([
-            'customer_decision_note' => ['nullable', 'string', 'max:1000'],
+            'rejection_remark' => ['required', 'string', 'max:1000'],
         ]);
 
         $prescription->update([
             'status' => 'rejected',
             'customer_decided_at' => now(),
-            'customer_decision_note' => $data['customer_decision_note'] ?? null,
+            'rejection_remark' => $data['rejection_remark'],
         ]);
 
         $prescription->store?->notify(new PrescriptionEventNotification(
             $prescription,
             'Customer rejected the estimate',
-            "{$request->user()->first_name} rejected the estimate for prescription #{$prescription->id}.",
-            route('store.prescriptions.show', $prescription),
+            "{$request->user()->first_name} rejected the estimate for prescription #{$prescription->id} — reason: {$data['rejection_remark']}",
+            route('store.prescriptions.show', $prescription, absolute: false),
             'ri-thumb-down-line',
             'danger',
         ));
@@ -199,7 +203,7 @@ class PrescriptionController extends Controller
             $prescription,
             'New message from '.$request->user()->first_name,
             Str::limit($data['body'], 100),
-            route('store.prescriptions.show', $prescription).'#chat',
+            route('store.prescriptions.show', $prescription, absolute: false).'#chat',
             'ri-message-3-line',
             'info',
         ));

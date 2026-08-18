@@ -179,8 +179,7 @@
                 <div class="spec-card">
                     <h4><span class="tag v1">Built</span> Self-Registration</h4>
                     <ul>
-                        <li>Mobile number + name — minimum required fields to start</li>
-                        <li>Email optional at signup (nullable on <code>users</code> now), can be added later from Account Settings (not built)</li>
+                        <li>Mobile number only — the single required field to start; a first-time number self-registers a bare row, a returning one just gets an OTP</li>
                         <li>No password field — OTP is the only credential (matches roadmap's Core Logic §OTP)</li>
                         <li>Duplicate mobile number → route straight into login/OTP instead of a "already registered" dead end</li>
                     </ul>
@@ -193,6 +192,14 @@
                         <li>Other environments: real random code, logged rather than sent — <strong>production SMS gateway is still the one open decision</strong> below, nothing delivers this to an actual phone yet</li>
                         <li>Resend cooldown (30s) + max attempts before a short lockout, mirroring the existing password-login <code>RateLimiter</code> pattern — built</li>
                         <li>OTP expires after 5 minutes — built</li>
+                    </ul>
+                </div>
+                <div class="spec-card">
+                    <h4><span class="tag v1">Built</span> Mandatory Profile Completion</h4>
+                    <ul>
+                        <li>Right after OTP verify: name, address, alternate number and postal pincode are checked — any missing sends the Customer to fill them in first (<code>/customer/profile</code>) before the dashboard opens; already-complete skips straight through</li>
+                        <li>Everything else (last name, email) stays optional</li>
+                        <li>Same form doubles as a later "My Details" edit screen, reachable from the topbar once complete</li>
                     </ul>
                 </div>
                 <div class="spec-card">

@@ -98,7 +98,7 @@ class PrescriptionController extends Controller
             $prescription,
             'Store picked up your prescription',
             "{$shopName} is now reviewing your prescription #{$prescription->id}.",
-            route('customer.prescriptions.show', $prescription),
+            route('customer.prescriptions.show', $prescription, absolute: false),
             'ri-store-2-line',
             'info',
         ));
@@ -138,6 +138,10 @@ class PrescriptionController extends Controller
             'call_notes' => ['nullable', 'string', 'max:2000'],
             'called' => ['nullable', 'boolean'],
             'status' => ['required', 'in:reviewing,contacted,awaiting_confirmation,confirmed,rejected'],
+            // Required only when rejecting on the customer's behalf — same
+            // reasoning as Customer::reject() itself: a bare rejection
+            // leaves no record of why, for either side to look back on.
+            'rejection_remark' => ['required_if:status,rejected', 'nullable', 'string', 'max:1000'],
         ]);
 
         $totalAmount = $data['total_amount'] ?? $prescription->total_amount;
@@ -160,6 +164,7 @@ class PrescriptionController extends Controller
             // accept/reject) — leave customer_decided_at null so the show
             // view can tell "customer clicked Accept" apart from "Store
             // marked it agreed on the phone".
+            ...($data['status'] === 'rejected' ? ['rejection_remark' => $data['rejection_remark']] : []),
         ]);
 
         // Spelled out with the actual amount/item count rather than a bare
@@ -187,13 +192,18 @@ class PrescriptionController extends Controller
         $customerNotice = [
             'awaiting_confirmation' => ['Price estimate ready', 'Review and accept/reject your ₹'.number_format((float) $totalAmount, 2)." estimate for prescription #{$prescription->id}.", 'ri-price-tag-3-line', 'primary'],
             'confirmed' => ['Order confirmed', "Your order for prescription #{$prescription->id} has been confirmed — the store is arranging delivery.", 'ri-checkbox-circle-line', 'success'],
-            'rejected' => ['Prescription not fulfilled', "Your prescription #{$prescription->id} could not be fulfilled by the store.", 'ri-close-circle-line', 'danger'],
+            // The array literal below is built eagerly regardless of which
+            // status actually happened, so `$data['rejection_remark']` must
+            // be null-coalesced — it's absent from $data entirely unless
+            // this status is 'rejected' (that's the only branch
+            // required_if applies to).
+            'rejected' => ['Prescription not fulfilled', "Your prescription #{$prescription->id} could not be fulfilled — reason: ".($data['rejection_remark'] ?? ''), 'ri-close-circle-line', 'danger'],
         ][$data['status']] ?? null;
 
         if ($customerNotice) {
             [$title, $body, $icon, $color] = $customerNotice;
             $prescription->customer->notify(new PrescriptionEventNotification(
-                $prescription, $title, $body, route('customer.prescriptions.show', $prescription), $icon, $color,
+                $prescription, $title, $body, route('customer.prescriptions.show', $prescription, absolute: false), $icon, $color,
             ));
         }
 
@@ -241,7 +251,7 @@ class PrescriptionController extends Controller
             $prescription,
             'Out for delivery',
             "{$captain->first_name} is bringing your order for prescription #{$prescription->id}.",
-            route('customer.prescriptions.show', $prescription),
+            route('customer.prescriptions.show', $prescription, absolute: false),
             'ri-e-bike-2-line',
             'success',
         ));
@@ -253,7 +263,7 @@ class PrescriptionController extends Controller
             $prescription,
             'New delivery assigned',
             "Deliver prescription #{$prescription->id} to {$prescription->delivery_address}".$paymentNote,
-            route('captain.dashboard'),
+            route('captain.dashboard', absolute: false),
             'ri-e-bike-2-line',
             'primary',
         ));
@@ -301,7 +311,7 @@ class PrescriptionController extends Controller
             $prescription,
             "New message from {$shopName}",
             Str::limit($data['body'], 100),
-            route('customer.prescriptions.show', $prescription).'#chat',
+            route('customer.prescriptions.show', $prescription, absolute: false).'#chat',
             'ri-message-3-line',
             'info',
         ));

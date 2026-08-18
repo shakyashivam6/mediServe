@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
     'called_at',
     'reviewed_at',
     'customer_decided_at',
-    'customer_decision_note',
+    'rejection_remark',
     'payment_method',
     'payment_status',
     'delivered_at',

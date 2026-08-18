@@ -23,6 +23,13 @@
         <p class="hint" style="margin-top:4px;">Uploaded {{ $prescription->created_at->format('d M Y, h:i A') }}</p>
     </div>
 
+    @if ($prescription->status === 'rejected' && $prescription->rejection_remark)
+        <div class="card" style="border-color:var(--red); background:var(--red-soft);">
+            <h3 style="margin-top:0; color:#991b1b;">Reason for rejection</h3>
+            <p style="margin:0; font-size:14.5px; color:#991b1b;">{{ $prescription->rejection_remark }}</p>
+        </div>
+    @endif
+
     @if ($prescription->status === 'awaiting_confirmation')
         <div class="card" style="border-color:var(--blue); background:var(--blue-soft);">
             <h3 style="margin-top:0;">Store's estimate</h3>
@@ -52,13 +59,17 @@
                 <p style="font-weight:700; font-size:16px; margin:0 0 14px;">Total: ₹{{ number_format((float) $prescription->total_amount, 2) }}</p>
             @endif
 
-            <form method="POST" action="{{ route('customer.prescriptions.accept', $prescription) }}" style="display:inline-block; width:48%;">
+            <form method="POST" action="{{ route('customer.prescriptions.accept', $prescription) }}">
                 @csrf
-                <button type="submit" class="btn" style="background:var(--green); margin-top:0;">Accept Estimate</button>
+                <button type="submit" class="btn" style="background:var(--green);">Accept Estimate</button>
             </form>
-            <form method="POST" action="{{ route('customer.prescriptions.reject', $prescription) }}" style="display:inline-block; width:48%; float:right;" onsubmit="return confirm('Reject this estimate?');">
+
+            <form method="POST" action="{{ route('customer.prescriptions.reject', $prescription) }}" style="margin-top:12px;">
                 @csrf
-                <button type="submit" class="btn" style="background:var(--red); margin-top:0;">Reject</button>
+                <label for="rejection_remark" style="margin-top:0;">Rejecting instead? Tell the store why</label>
+                <textarea id="rejection_remark" name="rejection_remark" required maxlength="1000" placeholder="e.g. Price too high, found it elsewhere, no longer needed…">{{ old('rejection_remark') }}</textarea>
+                @error('rejection_remark')<p class="field-error">{{ $message }}</p>@enderror
+                <button type="submit" class="btn" style="background:var(--red);" onclick="return confirm('Reject this estimate?');">Reject Estimate</button>
             </form>
         </div>
     @endif

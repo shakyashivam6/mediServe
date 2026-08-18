@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountRole;
+use App\Http\Middleware\EnsureCustomerProfileComplete;
 use App\Http\Middleware\EnsureStoreProfileExists;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'account_role' => EnsureAccountRole::class,
             'store_profile_exists' => EnsureStoreProfileExists::class,
+            'customer_profile_complete' => EnsureCustomerProfileComplete::class,
         ]);
 
         // A logged-out (or session-expired) hit on a /customer/... route

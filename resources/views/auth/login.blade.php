@@ -1,8 +1,9 @@
 @php
-    // Which tab opens by default: the Customer OTP form re-shows itself
-    // (with its own errors/old input) after a failed submit, since that
-    // POST bounces back here via back() — same page it was submitted from.
-    $customerTabActive = $errors->hasAny(['mobile', 'first_name', 'alternate_mobile']);
+    // Which tab opens by default: Customer OTP is the leftmost/primary tab
+    // and active unless the Staff form is the one that just failed (that
+    // POST bounces back here via back() — same page it was submitted from,
+    // so its own errors/old input need to re-show on the Staff tab instead).
+    $staffTabActive = $errors->hasAny(['login_id', 'password']);
 @endphp
 <x-layouts.login-layout>
     <div class="auth-bg d-flex min-vh-100 justify-content-center align-items-center">
@@ -20,29 +21,56 @@
 
                     <ul class="nav nav-pills bg-nav-pills nav-justified mb-3" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <a href="#staff-login" data-bs-toggle="tab" role="tab" aria-selected="{{ $customerTabActive ? 'false' : 'true' }}" class="nav-link rounded {{ $customerTabActive ? '' : 'active' }}">
-                                <i class="ri-shield-user-line align-middle me-1"></i> Staff Login
+                            <a href="#customer-login" data-bs-toggle="tab" role="tab" aria-selected="{{ $staffTabActive ? 'false' : 'true' }}" class="nav-link rounded {{ $staffTabActive ? '' : 'active' }}">
+                                <i class="ri-smartphone-line align-middle me-1"></i> User/Guest
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <a href="#customer-login" data-bs-toggle="tab" role="tab" aria-selected="{{ $customerTabActive ? 'true' : 'false' }}" class="nav-link rounded {{ $customerTabActive ? 'active' : '' }}">
-                                <i class="ri-smartphone-line align-middle me-1"></i> Customer OTP
+                            <a href="#staff-login" data-bs-toggle="tab" role="tab" aria-selected="{{ $staffTabActive ? 'true' : 'false' }}" class="nav-link rounded {{ $staffTabActive ? 'active' : '' }}">
+                                <i class="ri-shield-user-line align-middle me-1"></i> Staff
                             </a>
                         </li>
                     </ul>
 
                     <div class="tab-content">
+                        {{-- Customer — OTP-only, no password (see project memory:
+                             customer-auth-and-admin-driven-signup). Same form as
+                             Customer.auth.start, embedded here so a Customer never
+                             has to leave the home page just to find where to log
+                             in/sign up. Posts to the same customer.login.start
+                             route, which sends them on to the OTP-entry page. --}}
+                        <div class="tab-pane {{ $staffTabActive ? '' : 'show active' }}" id="customer-login" role="tabpanel">
+                            <p class="text-muted fs-13 mb-3">Enter your mobile number — we'll text you a one-time code. New here? This creates your account too.</p>
+
+                            <form method="POST" action="{{ route('customer.login.start') }}" class="text-start mb-1">
+                                @csrf
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="customer_mobile">Mobile number</label>
+                                    <input type="tel" id="customer_mobile" name="mobile" class="form-control @error('mobile') is-invalid @enderror" placeholder="10-digit mobile number" inputmode="numeric" pattern="\d{10}" maxlength="10" value="{{ old('mobile') }}" required {{ $staffTabActive ? '' : 'autofocus' }}>
+                                    @error('mobile')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Already have an account with this number? You'll be logged straight in.</div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button class="btn btn-primary fw-semibold" type="submit">Send OTP</button>
+                                </div>
+                            </form>
+                        </div>
+
                         {{-- Admin / Store / Captain — login_id + password. Store/
                              Captain accounts are created by Admin, not public
                              signup (see project memory: customer-auth-and-admin-
                              driven-signup). --}}
-                        <div class="tab-pane {{ $customerTabActive ? '' : 'show active' }}" id="staff-login" role="tabpanel">
+                        <div class="tab-pane {{ $staffTabActive ? 'show active' : '' }}" id="staff-login" role="tabpanel">
                             <form method="POST" action="{{ route('login') }}" class="text-start mb-1">
                                 @csrf
 
                                 <div class="mb-3">
                                     <label class="form-label" for="login_id">Login ID</label>
-                                    <input type="text" id="login_id" name="login_id" class="form-control @error('login_id') is-invalid @enderror" placeholder="Enter your login ID" value="{{ old('login_id') }}" required {{ $customerTabActive ? '' : 'autofocus' }} autocomplete="username">
+                                    <input type="text" id="login_id" name="login_id" class="form-control @error('login_id') is-invalid @enderror" placeholder="Enter your login ID" value="{{ old('login_id') }}" required {{ $staffTabActive ? 'autofocus' : '' }} autocomplete="username">
                                     @error('login_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -72,53 +100,10 @@
                                 </div>
                             </form>
                         </div>
-
-                        {{-- Customer — OTP-only, no password (see project memory:
-                             customer-auth-and-admin-driven-signup). Same form as
-                             Customer.auth.start, embedded here so a Customer never
-                             has to leave the home page just to find where to log
-                             in/sign up. Posts to the same customer.login.start
-                             route, which sends them on to the OTP-entry page. --}}
-                        <div class="tab-pane {{ $customerTabActive ? 'show active' : '' }}" id="customer-login" role="tabpanel">
-                            <p class="text-muted fs-13 mb-3">Enter your name and mobile number — we'll text you a one-time code. New here? This creates your account too.</p>
-
-                            <form method="POST" action="{{ route('customer.login.start') }}" class="text-start mb-1">
-                                @csrf
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="customer_first_name">Your name</label>
-                                    <input type="text" id="customer_first_name" name="first_name" class="form-control @error('first_name') is-invalid @enderror" placeholder="e.g. Priya Sharma" value="{{ old('first_name') }}" required {{ $customerTabActive ? 'autofocus' : '' }}>
-                                    @error('first_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="customer_mobile">Mobile number</label>
-                                    <input type="tel" id="customer_mobile" name="mobile" class="form-control @error('mobile') is-invalid @enderror" placeholder="10-digit mobile number" inputmode="numeric" pattern="\d{10}" maxlength="10" value="{{ old('mobile') }}" required>
-                                    @error('mobile')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text">Already have an account with this number? You'll be logged straight in.</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label" for="customer_alternate_mobile">Alternate number <span class="text-muted">(optional)</span></label>
-                                    <input type="tel" id="customer_alternate_mobile" name="alternate_mobile" class="form-control @error('alternate_mobile') is-invalid @enderror" placeholder="10-digit backup number" inputmode="numeric" pattern="\d{10}" maxlength="10" value="{{ old('alternate_mobile') }}">
-                                    @error('alternate_mobile')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="d-grid">
-                                    <button class="btn btn-primary fw-semibold" type="submit">Send OTP</button>
-                                </div>
-                            </form>
-                        </div>
                     </div>
 
                     <p class="mt-auto mb-0">
-                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold text-reset fs-12"><a href="https://tejasweb.com" class="link-info">Tejesweb Solutions</a></span>
+                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold text-reset fs-12"><a href="https://tejasweb.com" class="link-danger" target="_blank">Tejesweb Solutions</a></span>
                     </p>
                 </div>
             </div>

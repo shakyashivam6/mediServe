@@ -53,6 +53,20 @@
         <div class="alert alert-warning">This prescription was already claimed by another store.</div>
     @endif
 
+    @if ($prescription->status === 'rejected' && $prescription->rejection_remark)
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-start" role="alert">
+                    <iconify-icon icon="solar:close-circle-bold-duotone" class="fs-24 me-2 flex-shrink-0"></iconify-icon>
+                    <div>
+                        <strong>Rejected — reason given:</strong>
+                        <p class="mb-0">{{ $prescription->rejection_remark }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row row-cols-1 row-cols-lg-2">
         <div class="col">
             <div class="card">
@@ -111,11 +125,6 @@
                         @endif
                     @endif
 
-                    @if ($prescription->status === 'rejected' && $prescription->customer_decision_note)
-                        <hr class="my-3">
-                        <h5 class="header-title mb-2 text-danger">Customer's rejection note</h5>
-                        <p class="mb-0">{{ $prescription->customer_decision_note }}</p>
-                    @endif
                 </div>
             </div>
         </div>
@@ -178,6 +187,12 @@
                                 <label class="form-check-label" for="called">Mark as called {{ $prescription->called_at ? '(already logged, will refresh timestamp)' : 'just now' }}</label>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="rejection_remark" class="form-label">Rejection reason <span class="text-muted font-13">(only needed if you click Reject below)</span></label>
+                                <textarea name="rejection_remark" id="rejection_remark" class="form-control @error('rejection_remark') is-invalid @enderror" rows="2" placeholder="e.g. Out of stock, can't deliver to this address…">{{ old('rejection_remark') }}</textarea>
+                                @error('rejection_remark')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
                             <hr class="my-3">
 
                             <div class="d-flex flex-wrap gap-2">
@@ -194,7 +209,7 @@
                                 <button type="submit" name="status" value="confirmed" class="btn btn-success">
                                     <i class="ri-check-double-line align-middle"></i> Confirm Order (customer agreed on call)
                                 </button>
-                                <button type="submit" name="status" value="rejected" class="btn btn-outline-danger ms-auto" onclick="return confirm('Reject this prescription? This cannot be undone from here.');">
+                                <button type="submit" name="status" value="rejected" id="reject-btn" class="btn btn-outline-danger ms-auto">
                                     Reject
                                 </button>
                             </div>
@@ -421,6 +436,26 @@
                 tbody.addEventListener('input', function (e) {
                     if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
                         recalcTotal();
+                    }
+                });
+
+                // The remark field isn't marked `required` at the HTML level
+                // — that would also block Save Progress/Send Estimate/Confirm,
+                // which share this same form and don't need a reason. Instead
+                // only the Reject button's own click is gated on it (the
+                // server enforces the same rule either way via
+                // required_if:status,rejected, so this is just the earlier,
+                // friendlier check).
+                document.getElementById('reject-btn')?.addEventListener('click', function (e) {
+                    const remark = document.getElementById('rejection_remark');
+                    if (!remark.value.trim()) {
+                        e.preventDefault();
+                        remark.focus();
+                        alert('Please add a reason before rejecting.');
+                        return;
+                    }
+                    if (!confirm('Reject this prescription? This cannot be undone from here.')) {
+                        e.preventDefault();
                     }
                 });
             })();

@@ -63,9 +63,9 @@ class NotificationController extends Controller
     protected function fallbackRoute(Request $request): string
     {
         return match ($request->user()->role) {
-            'store' => route('store.dashboard'),
-            'captain' => route('captain.dashboard'),
-            default => route('customer.prescriptions.index'),
+            'store' => route('store.dashboard', absolute: false),
+            'captain' => route('captain.dashboard', absolute: false),
+            default => route('customer.prescriptions.index', absolute: false),
         };
     }
 }

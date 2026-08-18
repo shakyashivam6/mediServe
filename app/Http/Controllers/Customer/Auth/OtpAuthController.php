@@ -17,9 +17,11 @@ use Illuminate\View\View;
 /**
  * Customer login is OTP-only, no password (see project memory: customer-
  * auth-and-admin-driven-signup). One form doubles as signup + login: a
- * first-time mobile number self-registers here (name + mobile only, per
- * the customer-requirements draft); a returning number just gets an OTP —
- * "duplicate mobile routes straight into login, not a dead end".
+ * first-time mobile number self-registers here (mobile only — see project
+ * memory: customer-otp-profile-completion); a returning number just gets
+ * an OTP — "duplicate mobile routes straight into login, not a dead end".
+ * Name/address/alternate number are collected right after OTP verify, not
+ * here — see Customer\ProfileController.
  */
 class OtpAuthController extends Controller
 {
@@ -31,9 +33,7 @@ class OtpAuthController extends Controller
     public function start(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'first_name' => ['required', 'string', 'max:100'],
             'mobile' => ['required', 'digits:10'],
-            'alternate_mobile' => ['nullable', 'digits:10', 'different:mobile'],
         ]);
 
         $this->ensureNotRateLimited($request, $data['mobile'], 'customer-otp-request:', 5, 600);
@@ -47,11 +47,13 @@ class OtpAuthController extends Controller
         }
 
         if (! $user) {
+            // Name/address/alternate number aren't collected here — see
+            // project memory: customer-otp-profile-completion. This row is
+            // deliberately bare until the mandatory post-verify profile step
+            // fills the rest in.
             $user = User::create([
-                'first_name' => $data['first_name'],
                 'login_id' => User::generateLoginId(),
                 'mobile' => $data['mobile'],
-                'alternate_mobile' => $data['alternate_mobile'] ?? null,
                 'role' => 'customer',
                 'isActive' => true,
                 'otp' => (string) random_int(100000, 999999),
@@ -122,6 +124,15 @@ class OtpAuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->forget('customer_otp_mobile');
+
+        // Name/alternate number/address are mandatory but never collected
+        // during OTP itself — send an incomplete profile here first (see
+        // project memory: customer-otp-profile-completion). A returning
+        // Customer who already filled these in skips straight through.
+        if (! $user->hasCompleteProfile()) {
+            return redirect()->route('customer.profile.edit')
+                ->with('status', 'Just a couple more details before you get started.');
+        }
 
         return redirect()->intended(route('customer.prescriptions.index', absolute: false));
     }

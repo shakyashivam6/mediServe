@@ -11,6 +11,7 @@ use App\Http\Controllers\Captain\DashboardController as CaptainDashboardControll
 use App\Http\Controllers\Captain\DeliveryController as CaptainDeliveryController;
 use App\Http\Controllers\Customer\Auth\OtpAuthController as CustomerOtpAuthController;
 use App\Http\Controllers\Customer\PrescriptionController as CustomerPrescriptionController;
+use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Store\CaptainController as StoreCaptainController;
@@ -172,20 +173,29 @@ Route::middleware('guest')->prefix('customer')->name('customer.')->group(functio
 });
 
 Route::middleware(['auth', 'account_role:customer'])->prefix('customer')->name('customer.')->group(function () {
-    Route::get('prescriptions', [CustomerPrescriptionController::class, 'index'])->name('prescriptions.index');
-    Route::get('prescriptions/create', [CustomerPrescriptionController::class, 'create'])->name('prescriptions.create');
-    Route::post('prescriptions', [CustomerPrescriptionController::class, 'store'])->name('prescriptions.store');
-    Route::get('prescriptions/{prescription}', [CustomerPrescriptionController::class, 'show'])->name('prescriptions.show');
-    Route::post('prescriptions/{prescription}/accept', [CustomerPrescriptionController::class, 'accept'])->name('prescriptions.accept');
-    Route::post('prescriptions/{prescription}/reject', [CustomerPrescriptionController::class, 'reject'])->name('prescriptions.reject');
-    Route::get('prescriptions/{prescription}/files/{index}', [CustomerPrescriptionController::class, 'file'])->name('prescriptions.file');
-    Route::get('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'messages'])->name('prescriptions.messages.index');
-    Route::post('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'sendMessage'])->name('prescriptions.messages.store');
+    // Mandatory post-OTP profile completion (see project memory: customer-
+    // otp-profile-completion) — deliberately outside the
+    // customer_profile_complete-gated group below, so an incomplete
+    // Customer can always reach the form that fixes it.
+    Route::get('profile', [CustomerProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [CustomerProfileController::class, 'update'])->name('profile.update');
 
-    Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::get('{notification}/open', [NotificationController::class, 'open'])->name('open');
-        Route::post('mark-all-read', [NotificationController::class, 'markAllRead'])->name('mark-all-read');
+    Route::middleware('customer_profile_complete')->group(function () {
+        Route::get('prescriptions', [CustomerPrescriptionController::class, 'index'])->name('prescriptions.index');
+        Route::get('prescriptions/create', [CustomerPrescriptionController::class, 'create'])->name('prescriptions.create');
+        Route::post('prescriptions', [CustomerPrescriptionController::class, 'store'])->name('prescriptions.store');
+        Route::get('prescriptions/{prescription}', [CustomerPrescriptionController::class, 'show'])->name('prescriptions.show');
+        Route::post('prescriptions/{prescription}/accept', [CustomerPrescriptionController::class, 'accept'])->name('prescriptions.accept');
+        Route::post('prescriptions/{prescription}/reject', [CustomerPrescriptionController::class, 'reject'])->name('prescriptions.reject');
+        Route::get('prescriptions/{prescription}/files/{index}', [CustomerPrescriptionController::class, 'file'])->name('prescriptions.file');
+        Route::get('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'messages'])->name('prescriptions.messages.index');
+        Route::post('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'sendMessage'])->name('prescriptions.messages.store');
+
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('{notification}/open', [NotificationController::class, 'open'])->name('open');
+            Route::post('mark-all-read', [NotificationController::class, 'markAllRead'])->name('mark-all-read');
+        });
     });
 });
 

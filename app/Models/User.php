@@ -108,6 +108,24 @@ class User extends Authenticatable
     }
 
     /**
+     * A Customer's OTP signup only ever supplies a mobile number (see
+     * project memory: customer-otp-profile-completion) — this is the gate
+     * checked right after OTP verify to decide between the mandatory
+     * profile-completion form and going straight to the dashboard, and
+     * again by the `customer_profile_complete` middleware on every other
+     * Customer route. Deliberately a small, fixed set: identity (name),
+     * a backup contact number, and a deliverable postal address — not
+     * every KYC-style field Admin-created accounts carry.
+     */
+    public function hasCompleteProfile(): bool
+    {
+        return filled($this->first_name)
+            && filled($this->alternate_mobile)
+            && filled($this->address_line)
+            && filled($this->pincode);
+    }
+
+    /**
      * Next sequential login_id in the "MS0001" format already used by the
      * seeded accounts (see UserSeeder). Scans existing login_ids rather
      * than tracking a counter so it stays correct even if rows are deleted.

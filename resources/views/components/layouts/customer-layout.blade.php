@@ -143,6 +143,7 @@
                             <span class="nav-badge">{{ $unreadNotificationCount }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('customer.profile.edit') }}">My Details</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="link-btn">Log out</button>
@@ -155,6 +156,12 @@
     <main class="wrap">
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+        @if ($errors->any())
+            {{-- .alert-error already existed in the CSS above but nothing
+                 rendered it — every Customer form failure redirected back
+                 silently until now. --}}
+            <div class="alert alert-error">{{ $errors->first() }}</div>
         @endif
 
         {{ $slot }}
