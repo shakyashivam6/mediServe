@@ -13,6 +13,7 @@ use App\Http\Controllers\Customer\Auth\OtpAuthController as CustomerOtpAuthContr
 use App\Http\Controllers\Customer\PrescriptionController as CustomerPrescriptionController;
 use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PrescriptionBillController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Store\CaptainController as StoreCaptainController;
 use App\Http\Controllers\Store\CodSettlementController as StoreCodSettlementController;
@@ -126,6 +127,7 @@ Route::middleware(['auth', 'verified', 'account_role:store', 'store_profile_exis
         Route::get('{prescription}/files/{index}', [StorePrescriptionController::class, 'file'])->name('file');
         Route::get('{prescription}/messages', [StorePrescriptionController::class, 'messages'])->name('messages.index');
         Route::post('{prescription}/messages', [StorePrescriptionController::class, 'sendMessage'])->name('messages.store');
+        Route::get('{prescription}/bill', [PrescriptionBillController::class, 'show'])->name('bill');
     });
 
     // COD cash hand-off: a Captain collects cash at the door (Captain\
@@ -154,6 +156,7 @@ Route::middleware(['auth', 'verified', 'account_role:captain'])->prefix('captain
     Route::get('collections', [CaptainCollectionReportController::class, 'index'])->name('collections.index');
 
     Route::post('deliveries/{prescription}/deliver', [CaptainDeliveryController::class, 'deliver'])->name('deliveries.deliver');
+    Route::get('deliveries/{prescription}/bill', [PrescriptionBillController::class, 'show'])->name('deliveries.bill');
 
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -190,6 +193,7 @@ Route::middleware(['auth', 'account_role:customer'])->prefix('customer')->name('
         Route::get('prescriptions/{prescription}/files/{index}', [CustomerPrescriptionController::class, 'file'])->name('prescriptions.file');
         Route::get('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'messages'])->name('prescriptions.messages.index');
         Route::post('prescriptions/{prescription}/messages', [CustomerPrescriptionController::class, 'sendMessage'])->name('prescriptions.messages.store');
+        Route::get('prescriptions/{prescription}/bill', [PrescriptionBillController::class, 'show'])->name('prescriptions.bill');
 
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');

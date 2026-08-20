@@ -39,9 +39,22 @@
                                     </div>
                                 </div>
                                 <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Order</th>
+                                            <th>Customer</th>
+                                            <th>Delivered</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
                                     <tbody>
                                         @foreach ($orders as $order)
                                             <tr>
+                                                <td>
+                                                    <a href="{{ route('store.prescriptions.show', $order) }}" target="_blank" class="fw-semibold">
+                                                        #{{ $order->id }}
+                                                    </a>
+                                                </td>
                                                 <td>{{ $order->customer->first_name }} {{ $order->customer->second_name }}</td>
                                                 <td class="text-muted">{{ $order->delivered_at?->format('d M, h:i A') }}</td>
                                                 <td class="text-end">₹{{ number_format((float) $order->total_amount, 2) }}</td>
@@ -69,6 +82,7 @@
                         <table class="table table-sm mb-0">
                             <thead>
                                 <tr>
+                                    <th>Order</th>
                                     <th>Captain</th>
                                     <th>Customer</th>
                                     <th>Settled</th>
@@ -78,6 +92,11 @@
                             <tbody>
                                 @foreach ($settledRecently as $order)
                                     <tr>
+                                        <td>
+                                            <a href="{{ route('store.prescriptions.show', $order) }}" target="_blank" class="fw-semibold">
+                                                #{{ $order->id }}
+                                            </a>
+                                        </td>
                                         <td>{{ $order->captain?->first_name }} {{ $order->captain?->second_name }}</td>
                                         <td>{{ $order->customer->first_name }} {{ $order->customer->second_name }}</td>
                                         <td>{{ $order->settled_at?->format('d M, h:i A') }}</td>

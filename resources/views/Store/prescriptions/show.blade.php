@@ -263,6 +263,9 @@
                                         &middot; Delivered {{ $prescription->delivered_at?->format('d M Y, h:i A') }}
                                     @endif
                                 </p>
+                                <a href="{{ route('store.prescriptions.bill', $prescription) }}" target="_blank" class="btn btn-soft-primary btn-sm">
+                                    <i class="ri-file-text-line align-middle"></i> View Bill
+                                </a>
                             @endif
 
                             @if ($prescription->status === 'confirmed')

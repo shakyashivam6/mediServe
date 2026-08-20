@@ -92,21 +92,27 @@
         <div class="card" style="border-color:var(--green); background:var(--green-soft);">
             <h3 style="margin-top:0;">Out for delivery</h3>
             <p style="margin:0 0 4px;"><strong>{{ $prescription->captain->first_name }} {{ $prescription->captain->second_name }}</strong> is bringing your order.</p>
-            <p style="margin:0;">
+            <p style="margin:0 0 10px;">
                 <a href="tel:{{ $prescription->captain->mobile }}" style="color:var(--green); font-weight:700; text-decoration:none;">
                     <i class="ri-phone-line"></i> {{ $prescription->captain->mobile }}
                 </a>
             </p>
+            <a href="{{ route('customer.prescriptions.bill', ['prescription' => $prescription, 'download' => 1]) }}" class="btn btn-soft" style="width:auto; margin:0;">
+                <i class="ri-download-2-line"></i> Download Bill
+            </a>
         </div>
     @endif
 
     @if ($prescription->status === 'delivered' && $prescription->captain)
         <div class="card">
             <h3 style="margin-top:0;">Delivered</h3>
-            <p style="margin:0; color:var(--ink-soft);">
+            <p style="margin:0 0 10px; color:var(--ink-soft);">
                 Delivered by <strong>{{ $prescription->captain->first_name }} {{ $prescription->captain->second_name }}</strong>
                 on {{ $prescription->delivered_at?->format('d M Y, h:i A') }}.
             </p>
+            <a href="{{ route('customer.prescriptions.bill', ['prescription' => $prescription, 'download' => 1]) }}" class="btn btn-soft" style="width:auto; margin:0;">
+                <i class="ri-download-2-line"></i> Download Bill
+            </a>
         </div>
     @endif
 

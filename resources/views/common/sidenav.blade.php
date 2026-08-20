@@ -104,30 +104,38 @@
         --}}
         @php
             $sidenavMenu = config('adminmenu.' . (in_array(auth()->user()->role, ['store', 'captain']) ? auth()->user()->role : 'admin'), []);
-            // Store/Captain only (see NotificationController) — Admin never
-            // gets a PrescriptionEventNotification fired at it, so this is
-            // always 0 there and the badge just never renders.
-            $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
-            // Every unread notification here is a prescription-lifecycle
-            // event, so the badge belongs on the nav item that actually
-            // leads to that activity — Prescriptions for Store. Captain has
-            // no Prescriptions tab, so its Notifications item carries the
-            // badge instead. Admin never has unread notifications, so this
-            // stays unused there.
-            $badgeTargetLabel = match (auth()->user()->role) {
-                'store' => 'Prescriptions',
-                'captain' => 'Notifications',
-                default => null,
+
+            // Per-item nav badge counts, keyed by label — driven by actual
+            // prescription/payment state rather than raw unread
+            // notifications, so the number always matches what's sitting in
+            // that item's own list.
+            //
+            // Store: a prescription counts against "Prescriptions" from the
+            // moment it's visible (unclaimed, or claimed by this Store)
+            // until it's delivered — that's the whole pre-delivery workflow
+            // (claim, call, estimate, confirm, dispatch). The moment it's
+            // delivered it drops off Prescriptions and, if it was COD,
+            // picks up under "COD Settlements" instead — staying there
+            // until the Store marks the cash settled. `rejected` is
+            // excluded throughout: nothing more to do on either screen.
+            $badgeCounts = match (auth()->user()->role) {
+                'store' => [
+                    'Prescriptions' => \App\Models\Prescription::query()
+                        ->where(fn ($q) => $q->whereNull('store_id')->orWhere('store_id', auth()->id()))
+                        ->whereNotIn('status', ['delivered', 'rejected'])
+                        ->count(),
+                    'COD Settlements' => \App\Models\Prescription::query()
+                        ->where('store_id', auth()->id())
+                        ->where('status', 'delivered')
+                        ->where('payment_method', 'cod')
+                        ->where('payment_status', '!=', 'settled')
+                        ->count(),
+                ],
+                // Captain has no Prescriptions/Settlements tab of its own —
+                // its Notifications item keeps the plain unread count.
+                'captain' => ['Notifications' => auth()->user()->unreadNotifications()->count()],
+                default => [],
             };
-            // A Store can get several unread notifications about the same
-            // prescription (claimed, then a chat reply, then accepted) —
-            // counting raw notifications made the Prescriptions badge read
-            // higher than the number of rows actually needing a look, e.g.
-            // showing 3 against 2 visible prescriptions. Count distinct
-            // prescriptions instead so the badge matches the list.
-            $badgeCount = $badgeTargetLabel === 'Prescriptions'
-                ? auth()->user()->unreadNotifications()->get()->pluck('data.prescription_id')->unique()->count()
-                : $unreadNotificationCount;
         @endphp
         <ul class="side-nav">
             <li class="side-nav-title">Navigation</li>
@@ -165,8 +173,8 @@
                         <a href="{{ route($item['route']) }}" class="side-nav-link">
                             <span class="menu-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <span class="menu-text"> {{ $item['label'] }} </span>
-                            @if ($item['label'] === $badgeTargetLabel && $badgeCount > 0)
-                                <span class="badge bg-danger rounded-pill">{{ $badgeCount }}</span>
+                            @if (($badgeCounts[$item['label']] ?? 0) > 0)
+                                <span class="badge bg-danger rounded-pill">{{ $badgeCounts[$item['label']] }}</span>
                             @endif
                         </a>
                     </li>

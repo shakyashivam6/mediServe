@@ -35,11 +35,16 @@
                                 </div>
                                 <p class="text-muted mb-2">{{ $prescription->delivery_address }}</p>
 
-                                @if ($prescription->googleMapsUrl())
-                                    <a href="{{ $prescription->googleMapsUrl() }}" target="_blank" class="btn btn-soft-primary btn-sm mb-2">
-                                        <i class="ri-map-pin-line align-middle"></i> Open in Maps
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    @if ($prescription->googleMapsUrl())
+                                        <a href="{{ $prescription->googleMapsUrl() }}" target="_blank" class="btn btn-soft-primary btn-sm">
+                                            <i class="ri-map-pin-line align-middle"></i> Open in Maps
+                                        </a>
+                                    @endif
+                                    <a href="{{ route('captain.deliveries.bill', $prescription) }}" target="_blank" class="btn btn-soft-secondary btn-sm">
+                                        <i class="ri-file-text-line align-middle"></i> View Bill
                                     </a>
-                                @endif
+                                </div>
 
                                 <form method="POST" action="{{ route('captain.deliveries.deliver', $prescription) }}" class="d-flex align-items-center flex-wrap gap-2 mt-2">
                                     @csrf
@@ -82,6 +87,7 @@
                                     <th>Customer</th>
                                     <th>Delivered</th>
                                     <th>Payment</th>
+                                    <th>Bill</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -90,6 +96,11 @@
                                         <td>{{ $prescription->customer->first_name }} {{ $prescription->customer->second_name }}</td>
                                         <td>{{ $prescription->delivered_at?->format('d M, h:i A') }}</td>
                                         <td>{{ $prescription->paymentStatusLabel() }}</td>
+                                        <td>
+                                            <a href="{{ route('captain.deliveries.bill', $prescription) }}" target="_blank" class="btn btn-soft-secondary btn-sm">
+                                                <i class="ri-file-text-line align-middle"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
