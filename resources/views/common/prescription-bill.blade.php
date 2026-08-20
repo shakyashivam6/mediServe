@@ -12,7 +12,16 @@
     <meta charset="utf-8" />
     <title>Bill #{{ $prescription->id }} | {{ config('app.name', 'MediServe') }}</title>
     <style>
-        body { font-family: 'Helvetica', Arial, sans-serif; color: #1e293b; font-size: 12px; margin: 0; padding: 30px; }
+        {{--
+            dompdf's core "Helvetica"/Arial fonts are the standard 14 PDF
+            fonts — no embedded glyphs at all, so a non-Latin-1 character
+            like ₹ (U+20B9) silently falls back to "?". DejaVu Sans is
+            bundled with dompdf itself and does have the Rupee glyph, so
+            it's used here instead — this is the actual fix, not a display
+            quirk in the app itself (the same ₹ renders fine everywhere
+            else, which is plain HTML/browser text, not a generated PDF).
+        --}}
+        body { font-family: 'DejaVu Sans', sans-serif; color: #1e293b; font-size: 12px; margin: 0; padding: 30px; }
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
         .header-table td { vertical-align: top; }
         .brand { font-size: 20px; font-weight: bold; color: #2563eb; }
