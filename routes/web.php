@@ -99,6 +99,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         Route::get('/', [ProductController::class, 'index'])->name('index');
         Route::get('import', [ProductController::class, 'import'])->name('import');
         Route::post('import', [ProductController::class, 'processImport'])->name('import.store');
+        Route::get('{product}/edit', [ProductController::class, 'edit'])->name('edit');
+        Route::put('{product}', [ProductController::class, 'update'])->name('update');
         Route::post('{product}/toggle-rx', [ProductController::class, 'toggleRx'])->name('toggle-rx');
         Route::post('{product}/toggle-active', [ProductController::class, 'toggleActive'])->name('toggle-active');
     });
