@@ -32,6 +32,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Login ID</th>
                                 <th>Vehicle</th>
                                 <th>Status</th>
                                 <th style="width: 100px;">Actions</th>
@@ -55,6 +56,7 @@
                     ajax: '{{ route('store.captains.index') }}',
                     columns: [
                         { data: 'name', name: 'first_name' },
+                        { data: 'login_id', name: 'login_id' },
                         { data: 'vehicle_type', name: 'vehicle_type' },
                         { data: 'status', name: 'isActive' },
                         { data: 'actions', name: 'actions', orderable: false, searchable: false },

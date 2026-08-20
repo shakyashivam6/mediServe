@@ -26,6 +26,7 @@ class CaptainController extends Controller
         if ($request->ajax()) {
             return DataTables::of(User::query()->where('role', 'captain')->where('store_id', $request->user()->id))
                 ->addColumn('name', fn (User $user) => $user->first_name.' '.$user->second_name)
+                ->addColumn('login_id', fn (User $user) => $user->login_id)
                 ->addColumn('vehicle_type', fn (User $user) => ucfirst($user->vehicle_type ?? '—'))
                 ->addColumn('status', fn (User $user) => $user->isActive
                     ? '<span class="badge bg-success">Active</span>'

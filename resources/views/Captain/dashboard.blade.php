@@ -45,13 +45,14 @@
                                     @csrf
                                     @if ($prescription->isCod())
                                         <div class="form-check">
-                                            <input type="checkbox" name="collected" value="1" class="form-check-input" id="collected-{{ $prescription->id }}" checked>
+                                            <input type="checkbox" name="collected" value="1" class="form-check-input" id="collected-{{ $prescription->id }}"
+                                                onchange="document.getElementById('deliver-btn-{{ $prescription->id }}').disabled = !this.checked">
                                             <label class="form-check-label" for="collected-{{ $prescription->id }}">
                                                 Collected ₹{{ number_format((float) $prescription->total_amount, 2) }} cash
                                             </label>
                                         </div>
                                     @endif
-                                    <button type="submit" class="btn btn-success btn-sm">
+                                    <button type="submit" id="deliver-btn-{{ $prescription->id }}" class="btn btn-success btn-sm" @if ($prescription->isCod()) disabled @endif>
                                         <i class="ri-check-line align-middle"></i> Mark Delivered
                                     </button>
                                 </form>
