@@ -103,7 +103,7 @@
                     </div>
 
                     <p class="mt-auto mb-0">
-                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold text-reset fs-12"><a href="https://tejasweb.com" class="link-danger" target="_blank">Tejesweb Solutions</a></span>
+                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold text-reset fs-12"><a href="https://tejasweb.com" target="_blank">Tejesweb Solutions</a></span>
                     </p>
                 </div>
             </div>

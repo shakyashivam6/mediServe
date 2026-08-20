@@ -14,7 +14,7 @@
     <title>{{ $title }} | {{ config('app.name') }} Captain Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="{{ config('app.name') }} Captain Panel — manage deliveries and cash collections." name="description" />
-    <meta content="Tejaswebsolutionsthemes" name="author" />
+    <meta content="Tejasweb Solutions" name="author" />
     <base href="{{ url('/') }}">
 
     <!-- App favicon -->

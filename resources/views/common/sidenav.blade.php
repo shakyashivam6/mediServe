@@ -119,6 +119,15 @@
                 'captain' => 'Notifications',
                 default => null,
             };
+            // A Store can get several unread notifications about the same
+            // prescription (claimed, then a chat reply, then accepted) —
+            // counting raw notifications made the Prescriptions badge read
+            // higher than the number of rows actually needing a look, e.g.
+            // showing 3 against 2 visible prescriptions. Count distinct
+            // prescriptions instead so the badge matches the list.
+            $badgeCount = $badgeTargetLabel === 'Prescriptions'
+                ? auth()->user()->unreadNotifications()->get()->pluck('data.prescription_id')->unique()->count()
+                : $unreadNotificationCount;
         @endphp
         <ul class="side-nav">
             <li class="side-nav-title">Navigation</li>
@@ -156,8 +165,8 @@
                         <a href="{{ route($item['route']) }}" class="side-nav-link">
                             <span class="menu-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <span class="menu-text"> {{ $item['label'] }} </span>
-                            @if ($item['label'] === $badgeTargetLabel && $unreadNotificationCount > 0)
-                                <span class="badge bg-danger rounded-pill">{{ $unreadNotificationCount }}</span>
+                            @if ($item['label'] === $badgeTargetLabel && $badgeCount > 0)
+                                <span class="badge bg-danger rounded-pill">{{ $badgeCount }}</span>
                             @endif
                         </a>
                     </li>

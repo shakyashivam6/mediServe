@@ -6,7 +6,7 @@
     <title>Log In | {{ config('app.name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="{{ config('app.name') }} — Secure. Scalable. Simplified." name="description" />
-    <meta content="Tejaswebsolutionsthemes" name="author" />
+    <meta content="Tejasweb Solutions" name="author" />
     <base href="{{ url('/') }}">
 
     <!-- App favicon -->

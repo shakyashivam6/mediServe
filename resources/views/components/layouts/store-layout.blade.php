@@ -7,7 +7,7 @@
     <title>{{ $title }} | {{ config('app.name') }} Store Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="{{ config('app.name') }} Store Panel — manage your store profile, captains, prescription orders and COD settlements." name="description" />
-    <meta content="Tejaswebsolutionsthemes" name="author" />
+    <meta content="Tejasweb Solutions" name="author" />
     <base href="{{ url('/') }}">
 
     <!-- App favicon -->
