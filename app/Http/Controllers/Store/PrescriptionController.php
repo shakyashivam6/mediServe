@@ -40,6 +40,7 @@ class PrescriptionController extends Controller
                     ->with('customer')
                     ->where(fn ($q) => $q->whereNull('store_id')->orWhere('store_id', $storeId))
             )
+                ->addColumn('prescription_number', fn (Prescription $p) => $p->prescription_number ?? '—')
                 ->addColumn('customer', fn (Prescription $p) => $p->customer->first_name.' '.$p->customer->second_name)
                 ->addColumn('mobile', fn (Prescription $p) => $p->customer->mobile)
                 ->addColumn('uploaded', fn (Prescription $p) => $p->created_at->format('d M Y, h:i A'))

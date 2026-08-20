@@ -16,7 +16,7 @@
 
     <div class="card" style="margin-top:12px;">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <h2 style="margin:0;">Prescription #{{ $prescription->id }}</h2>
+            <h2 style="margin:0;">{{ $prescription->prescription_number ?? 'Prescription #'.$prescription->id }}</h2>
             <span class="status-badge status-{{ $prescription->status }}">{{ $prescription->customerStatusLabel() }}</span>
         </div>
         @if ($prescription->order_number)

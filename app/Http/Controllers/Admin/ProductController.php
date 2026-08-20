@@ -22,6 +22,9 @@ class ProductController extends Controller
     {
         if ($request->ajax()) {
             return DataTables::of(Product::query())
+                ->addColumn('code', fn (Product $product) => $product->code
+                    ? '<span class="badge bg-soft-primary text-primary">'.e($product->code).'</span>'
+                    : '<span class="text-muted">—</span>')
                 ->addColumn('thumbnail', fn (Product $product) => $product->thumbnail
                     ? '<img src="'.e($product->thumbnail).'" alt="" style="width:36px;height:36px;object-fit:cover;border-radius:4px;">'
                     : '<span class="text-muted">—</span>')
@@ -45,7 +48,7 @@ class ProductController extends Controller
                         .'<button type="submit" class="btn btn-soft-'.$variant.' btn-sm">'.$label.'</button>'
                         .'</form>';
                 })
-                ->rawColumns(['thumbnail', 'requires_prescription', 'is_active'])
+                ->rawColumns(['code', 'thumbnail', 'requires_prescription', 'is_active'])
                 ->make(true);
         }
 

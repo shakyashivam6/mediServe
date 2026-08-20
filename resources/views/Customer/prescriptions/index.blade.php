@@ -15,7 +15,7 @@
             <a href="{{ route('customer.prescriptions.show', $prescription) }}" style="text-decoration:none; color:inherit; display:block;">
                 <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <div>
-                        <div style="font-weight:700; font-size:14px;">Prescription #{{ $prescription->id }}</div>
+                        <div style="font-weight:700; font-size:14px;">{{ $prescription->prescription_number ?? 'Prescription #'.$prescription->id }}</div>
                         <div class="hint" style="margin-top:4px;">{{ $prescription->created_at->format('d M Y, h:i A') }}</div>
                         @if ($prescription->remark)
                             <div class="hint" style="margin-top:4px;">{{ \Illuminate\Support\Str::limit($prescription->remark, 60) }}</div>

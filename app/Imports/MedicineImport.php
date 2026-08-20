@@ -38,6 +38,17 @@ class MedicineImport implements SkipsEmptyRows, SkipsOnError, SkipsOnFailure, To
     /** @var array<int, string> */
     public array $failures = [];
 
+    /**
+     * Codes reserved so far in this import run, keyed by code — see
+     * Product::generateCode()'s $avoidCodes param. Needed because rows in
+     * the same batch haven't hit the database yet when later rows in that
+     * same batch are generating their own code, so the DB-side uniqueness
+     * check alone can't see them.
+     *
+     * @var array<string, bool>
+     */
+    protected array $reservedCodes = [];
+
     public function model(array $row): Model|array|null
     {
         $itemId = trim((string) ($row['item_id'] ?? ''));
@@ -49,8 +60,21 @@ class MedicineImport implements SkipsEmptyRows, SkipsOnError, SkipsOnFailure, To
 
         $this->imported++;
 
+        // Only a brand-new item_id needs a fresh code — an existing one
+        // keeps whatever it already has (`code` is deliberately left out
+        // of upsertColumns() below, so this value is simply discarded by
+        // the upsert on a re-import match).
+        $code = Product::query()->where('item_id', $itemId)->exists()
+            ? null
+            : Product::generateCode($name, $this->reservedCodes);
+
+        if ($code !== null) {
+            $this->reservedCodes[$code] = true;
+        }
+
         return new Product([
             'item_id' => $itemId,
+            'code' => $code,
             'name' => $name,
             'composition' => $this->nullableString($row['composition'] ?? null),
             'manufacturer' => $this->nullableString($row['manufacturer'] ?? null),

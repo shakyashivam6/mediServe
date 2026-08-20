@@ -21,6 +21,7 @@
                             <div class="border rounded p-3 mb-3">
                                 <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
                                     <div>
+                                        <div class="text-muted font-12 mb-1">{{ $prescription->prescription_number ?? '#'.$prescription->id }}</div>
                                         <strong>{{ $prescription->customer->first_name }} {{ $prescription->customer->second_name }}</strong>
                                         <a href="tel:{{ $prescription->customer->mobile }}" class="ms-2 text-muted">
                                             <i class="ri-phone-line align-middle"></i> {{ $prescription->customer->mobile }}
@@ -84,6 +85,7 @@
                         <table class="table table-sm mb-0">
                             <thead>
                                 <tr>
+                                    <th>Prescription ID</th>
                                     <th>Customer</th>
                                     <th>Delivered</th>
                                     <th>Payment</th>
@@ -93,6 +95,7 @@
                             <tbody>
                                 @foreach ($recentlyDelivered as $prescription)
                                     <tr>
+                                        <td>{{ $prescription->prescription_number ?? '#'.$prescription->id }}</td>
                                         <td>{{ $prescription->customer->first_name }} {{ $prescription->customer->second_name }}</td>
                                         <td>{{ $prescription->delivered_at?->format('d M, h:i A') }}</td>
                                         <td>{{ $prescription->paymentStatusLabel() }}</td>

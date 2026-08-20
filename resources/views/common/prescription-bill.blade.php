@@ -57,6 +57,9 @@
             <td class="bill-meta">
                 <div class="title">Delivery Bill</div>
                 <div class="row">Bill No: <strong>{{ $prescription->order_number ?? '#'.$prescription->id }}</strong></div>
+                @if ($prescription->prescription_number)
+                    <div class="row">Prescription ID: {{ $prescription->prescription_number }}</div>
+                @endif
                 <div class="row">Date: {{ ($prescription->delivered_at ?? $prescription->created_at)->format('d M Y, h:i A') }}</div>
                 <div class="row">
                     @if ($prescription->payment_method === 'prepaid')

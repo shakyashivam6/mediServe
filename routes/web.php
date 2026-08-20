@@ -20,6 +20,7 @@ use App\Http\Controllers\Store\CodSettlementController as StoreCodSettlementCont
 use App\Http\Controllers\Store\DashboardController as StoreDashboardController;
 use App\Http\Controllers\Store\LedgerController as StoreLedgerController;
 use App\Http\Controllers\Store\PrescriptionController as StorePrescriptionController;
+use App\Http\Controllers\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Store\ProfileController as StoreProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -115,6 +116,10 @@ Route::middleware(['auth', 'verified', 'account_role:store', 'store_profile_exis
     Route::resource('captains', StoreCaptainController::class)
         ->except(['show'])
         ->parameters(['captains' => 'captain']);
+
+    // Backs the "Add medicine" autosuggest on a Prescription's items table
+    // — see Store\ProductController's doc comment.
+    Route::get('products/search', [StoreProductController::class, 'search'])->name('products.search');
 
     // Shared queue: any approved Store can see + claim an unclaimed
     // Prescription; PrescriptionController enforces per-row ownership

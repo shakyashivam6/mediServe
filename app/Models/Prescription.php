@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
+    'prescription_number',
     'order_number',
     'user_id',
     'store_id',
@@ -157,6 +158,29 @@ class Prescription extends Model
             'dispatched' => 'Out for Delivery',
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };
+    }
+
+    /**
+     * Next sequential Prescription ID, in "RX-000001" form — set once, at
+     * upload time (Customer\PrescriptionController::store()), so every
+     * Prescription is findable by it from the moment it exists, not just
+     * once an order is confirmed (that's order_number/generateOrderNumber()
+     * below — a different ID for a different moment: this one is "which
+     * record is this", that one is "which finalised order is this"). Always
+     * "RX-" prefixed and platform-wide rather than Store-branded — a fresh
+     * upload has no claiming Store yet to derive a prefix from. Same
+     * "scan existing rows for the max" approach as generateOrderNumber()/
+     * User::generateLoginId().
+     */
+    public static function generatePrescriptionNumber(): string
+    {
+        $lastNumber = static::query()
+            ->where('prescription_number', 'like', 'RX-%')
+            ->pluck('prescription_number')
+            ->map(fn (string $n) => (int) substr($n, 3))
+            ->max() ?? 0;
+
+        return 'RX-'.str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
     }
 
     /**

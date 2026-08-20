@@ -26,6 +26,7 @@
                         <thead>
                             <tr>
                                 <th></th>
+                                <th>Code</th>
                                 <th>Name</th>
                                 <th>Item ID</th>
                                 <th>Manufacturer</th>
@@ -53,6 +54,7 @@
                     ajax: '{{ route('admin.products.index') }}',
                     columns: [
                         { data: 'thumbnail', name: 'thumbnail', orderable: false, searchable: false },
+                        { data: 'code', name: 'code' },
                         { data: 'name', name: 'name' },
                         { data: 'item_id', name: 'item_id' },
                         { data: 'manufacturer', name: 'manufacturer' },

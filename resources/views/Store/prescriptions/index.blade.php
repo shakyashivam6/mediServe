@@ -24,6 +24,7 @@
                     <table id="prescriptions-datatable" class="table table-striped w-100 nowrap">
                         <thead>
                             <tr>
+                                <th>Prescription ID</th>
                                 <th>Customer</th>
                                 <th>Mobile</th>
                                 <th>Uploaded</th>
@@ -46,9 +47,10 @@
                     processing: true,
                     serverSide: true,
                     scrollX: true,
-                    order: [[2, 'desc']],
+                    order: [[3, 'desc']],
                     ajax: '{{ route('store.prescriptions.index') }}',
                     columns: [
+                        { data: 'prescription_number', name: 'prescription_number' },
                         { data: 'customer', name: 'customer.first_name', orderable: false },
                         { data: 'mobile', name: 'customer.mobile', orderable: false },
                         { data: 'uploaded', name: 'created_at' },

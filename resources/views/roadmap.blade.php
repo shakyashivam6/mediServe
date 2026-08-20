@@ -695,7 +695,9 @@
                         <ul>
                             <li>Master <code>products</code> table + Admin &gt; Products list (server-side DataTable) — built</li>
                             <li>Bulk import from CSV/XLSX (<code>maatwebsite/excel</code>) — item_id, drug name, composition, manufacturer, mrp, price, packaging, use of medicine, up to 10 image URLs; upserts on <code>item_id</code> so re-uploading updates instead of duplicating — built</li>
+                            <li>Auto-generated unique 3-letter <code>code</code> per product (<code>Product::generateCode()</code>), assigned once on first import/creation and never overwritten by a later re-import — built</li>
                             <li>Rx flag (<code>requires_prescription</code>) + active/inactive per product — quick toggle from the list, built</li>
+                            <li>Medicine autosuggest on a Store's "Add medicine" row while pricing a Prescription — search-as-you-type against this catalog by name or by its 3-letter code (<code>store.products.search</code>); purely a suggestion, typing any medicine not in the catalog is still allowed — built</li>
                             <li><strong>Pending:</strong> Substitute Products, Categories, Category Groups, Tags</li>
                             <li><strong>Pending:</strong> Per-Store stock management (batch/expiry) — separate table referencing <code>products</code></li>
                         </ul>

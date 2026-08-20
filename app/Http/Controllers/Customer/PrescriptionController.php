@@ -60,6 +60,7 @@ class PrescriptionController extends Controller
             ->all();
 
         $prescription = $request->user()->prescriptions()->create([
+            'prescription_number' => Prescription::generatePrescriptionNumber(),
             'files' => $paths,
             'remark' => $data['remark'] ?? null,
             'delivery_address' => $data['delivery_address'],

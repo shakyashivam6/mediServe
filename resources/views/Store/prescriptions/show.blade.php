@@ -21,7 +21,7 @@
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <h4 class="mb-0">
-                        Prescription #{{ $prescription->id }}
+                        {{ $prescription->prescription_number ?? 'Prescription #'.$prescription->id }}
                         @if ($prescription->order_number)
                             <span class="text-muted fs-15">&middot; Order {{ $prescription->order_number }}</span>
                         @endif
@@ -163,7 +163,7 @@
                                     <tbody>
                                         @foreach (($prescription->items ?: [['name' => '', 'quantity' => 1, 'price' => '']]) as $i => $item)
                                             <tr>
-                                                <td><input type="text" name="items[{{ $i }}][name]" class="form-control form-control-sm" value="{{ $item['name'] ?? '' }}" placeholder="e.g. Paracetamol 500mg"></td>
+                                                <td style="position:relative;"><input type="text" name="items[{{ $i }}][name]" class="form-control form-control-sm medicine-name-input" autocomplete="off" value="{{ $item['name'] ?? '' }}" placeholder="e.g. Paracetamol 500mg, or type a code like PAR"></td>
                                                 <td><input type="number" min="1" name="items[{{ $i }}][quantity]" class="form-control form-control-sm item-qty" value="{{ $item['quantity'] ?? 1 }}"></td>
                                                 <td><input type="number" step="0.01" min="0" name="items[{{ $i }}][price]" class="form-control form-control-sm item-price" value="{{ $item['price'] ?? '' }}"></td>
                                                 <td><button type="button" class="btn btn-soft-danger btn-sm remove-row"><i class="ri-close-line"></i></button></td>
@@ -427,7 +427,7 @@
                 document.getElementById('add-item-row')?.addEventListener('click', function () {
                     const i = rowCount();
                     const tr = document.createElement('tr');
-                    tr.innerHTML = '<td><input type="text" name="items[' + i + '][name]" class="form-control form-control-sm" placeholder="e.g. Paracetamol 500mg"></td>'
+                    tr.innerHTML = '<td style="position:relative;"><input type="text" name="items[' + i + '][name]" class="form-control form-control-sm medicine-name-input" autocomplete="off" placeholder="e.g. Paracetamol 500mg, or type a code like PAR"></td>'
                         + '<td><input type="number" min="1" name="items[' + i + '][quantity]" class="form-control form-control-sm item-qty" value="1"></td>'
                         + '<td><input type="number" step="0.01" min="0" name="items[' + i + '][price]" class="form-control form-control-sm item-price"></td>'
                         + '<td><button type="button" class="btn btn-soft-danger btn-sm remove-row"><i class="ri-close-line"></i></button></td>';
@@ -444,6 +444,88 @@
                 tbody.addEventListener('input', function (e) {
                     if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
                         recalcTotal();
+                    }
+                });
+
+                // Medicine autosuggest — typing into a "Medicine" cell
+                // looks it up against the Products catalog by name or by
+                // its 3-letter code (Product::code, see
+                // Store\ProductController::search()). Purely a suggestion:
+                // nothing here stops typing a medicine that isn't in the
+                // catalog at all, the field stays plain free text either
+                // way — this just makes a catalog match fast to pick.
+                let medicineSearchTimer = null;
+
+                function closeMedicineSuggestions() {
+                    document.querySelectorAll('.medicine-suggest-list').forEach(function (el) { el.remove(); });
+                }
+
+                function renderMedicineSuggestions(input, products) {
+                    closeMedicineSuggestions();
+                    if (!products.length) return;
+
+                    const list = document.createElement('div');
+                    list.className = 'medicine-suggest-list list-group';
+                    list.style.cssText = 'position:absolute; top:100%; left:0; right:0; z-index:1000; max-height:220px; overflow-y:auto; box-shadow:0 4px 10px rgba(0,0,0,.15);';
+
+                    products.forEach(function (p) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'list-group-item list-group-item-action py-1 px-2';
+                        btn.style.fontSize = '12.5px';
+                        btn.innerHTML = '<span class="badge bg-soft-primary text-primary me-1">' + p.code + '</span>' + p.name
+                            + (p.mrp ? '<span class="text-muted float-end">₹' + parseFloat(p.mrp).toFixed(2) + '</span>' : '');
+
+                        // mousedown, not click — fires before the input's
+                        // own blur/focusout, so the suggestion list is
+                        // still in the DOM when this handler reads it.
+                        btn.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                            input.value = p.name;
+
+                            const row = input.closest('tr');
+                            const priceInput = row.querySelector('.item-price');
+                            if (priceInput && !priceInput.value && p.mrp) {
+                                priceInput.value = parseFloat(p.mrp).toFixed(2);
+                            }
+
+                            closeMedicineSuggestions();
+                            recalcTotal();
+                        });
+
+                        list.appendChild(btn);
+                    });
+
+                    input.parentElement.appendChild(list);
+                }
+
+                tbody.addEventListener('input', function (e) {
+                    if (!e.target.classList.contains('medicine-name-input')) return;
+
+                    const input = e.target;
+                    const query = input.value.trim();
+
+                    clearTimeout(medicineSearchTimer);
+
+                    if (query.length < 2) {
+                        closeMedicineSuggestions();
+                        return;
+                    }
+
+                    medicineSearchTimer = setTimeout(function () {
+                        fetch('{{ route('store.products.search') }}?q=' + encodeURIComponent(query))
+                            .then(function (r) { return r.ok ? r.json() : []; })
+                            .then(function (products) { renderMedicineSuggestions(input, products); })
+                            .catch(function () { /* silent — free-text entry still works either way */ });
+                    }, 250);
+                });
+
+                // Slight delay before tearing the list down so the
+                // suggestion button's own mousedown above still gets a
+                // chance to run first.
+                tbody.addEventListener('focusout', function (e) {
+                    if (e.target.classList.contains('medicine-name-input')) {
+                        setTimeout(closeMedicineSuggestions, 150);
                     }
                 });
 
