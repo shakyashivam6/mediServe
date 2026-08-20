@@ -7,7 +7,7 @@
     <title>{{ $title }} | {{ config('app.name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="{{ config('app.name') }} Admin Panel — manage stores, captains, products and access control." name="description" />
-    <meta content="Tejaswebthemes" name="author" />
+    <meta content="Tejaswebsolutionsthemes" name="author" />
     <base href="{{ url('/') }}">
 
     <!-- App favicon -->
