@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Store\CaptainController as StoreCaptainController;
 use App\Http\Controllers\Store\CodSettlementController as StoreCodSettlementController;
 use App\Http\Controllers\Store\DashboardController as StoreDashboardController;
+use App\Http\Controllers\Store\LedgerController as StoreLedgerController;
 use App\Http\Controllers\Store\PrescriptionController as StorePrescriptionController;
 use App\Http\Controllers\Store\ProfileController as StoreProfileController;
 use Illuminate\Support\Facades\Route;
@@ -137,6 +138,12 @@ Route::middleware(['auth', 'verified', 'account_role:store', 'store_profile_exis
         Route::get('/', [StoreCodSettlementController::class, 'index'])->name('index');
         Route::post('{captain}/settle', [StoreCodSettlementController::class, 'settle'])->name('settle');
     });
+
+    // Accounting view over every payment this Store's software has ever
+    // recorded — Prepaid + COD, across confirm/dispatch/settle — see
+    // Store\LedgerController's doc comment for why `delivered` is the
+    // revenue-recognition point used throughout.
+    Route::get('ledger', [StoreLedgerController::class, 'index'])->name('ledger.index');
 
     // See NotificationController — shared with the Captain/Customer groups
     // below, one controller for all three since reading/marking-read a

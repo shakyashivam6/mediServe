@@ -165,6 +165,12 @@ class PrescriptionController extends Controller
             // view can tell "customer clicked Accept" apart from "Store
             // marked it agreed on the phone".
             ...($data['status'] === 'rejected' ? ['rejection_remark' => $data['rejection_remark']] : []),
+            // Order is now final — mint its Order ID under this Store's own
+            // prefix (see Prescription::generateOrderNumber). Guarded so a
+            // re-submit of the same 'confirmed' status never overwrites it.
+            ...($data['status'] === 'confirmed' && ! $prescription->order_number
+                ? ['order_number' => Prescription::generateOrderNumber($request->user()->store?->order_prefix)]
+                : []),
         ]);
 
         // Spelled out with the actual amount/item count rather than a bare

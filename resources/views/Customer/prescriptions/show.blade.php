@@ -19,6 +19,9 @@
             <h2 style="margin:0;">Prescription #{{ $prescription->id }}</h2>
             <span class="status-badge status-{{ $prescription->status }}">{{ $prescription->customerStatusLabel() }}</span>
         </div>
+        @if ($prescription->order_number)
+            <p class="hint" style="margin-top:4px;">Order ID: <strong>{{ $prescription->order_number }}</strong></p>
+        @endif
         <p style="color:var(--ink-soft); font-size:13.5px; margin:8px 0 0;">{{ $statusCopy }}</p>
         <p class="hint" style="margin-top:4px;">Uploaded {{ $prescription->created_at->format('d M Y, h:i A') }}</p>
     </div>

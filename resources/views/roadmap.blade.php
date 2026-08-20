@@ -452,8 +452,10 @@
                         <li>Register &amp; manage own Captains (delivery staff) — built, locked until the Store itself is approved</li>
                         <li>Shared Prescriptions queue — claim an unclaimed upload, view files/remark/delivery location, log the voice call, post a priced estimate, and assign one of your own Captains once the Customer accepts — built</li>
                         <li>Prepaid/COD chosen per order at Captain assignment; COD Settlements screen shows what each Captain is holding and lets the Store clear it once physically handed back — built</li>
+                        <li>Auto-generated Order ID once a Prescription is confirmed (<code>PREFIX-000123</code>) — prefix is Store-configurable on My Store Profile, falls back to the platform default "OD" if left blank — built</li>
+                        <li>PDF delivery bill per order, generated once a Captain is assigned — viewable by Store/Captain, downloadable by the Customer — built</li>
+                        <li>Store Ledger — accounting-style sales register (today's/this month's sales, cash received vs. pending COD, daily summary, per-order detail) over every delivered order's payment — built</li>
                         <li>Receive, accept &amp; prepare full Orders (once Cart/Checkout exists) — not built yet</li>
-                        <li>Store-level sales reports &amp; earnings</li>
                     </ul>
                 </div>
 
@@ -754,7 +756,11 @@
                             <li>Captain's own panel (<code>/captain/...</code>) — "To Deliver" queue, one-tap Mark Delivered that doubles as COD cash collection, and a "My Collections" report (cash in hand, lifetime settled, day-by-day delivered list) — built, first thing a Captain account can log into</li>
                             <li>Store's COD Settlements screen — cash each Captain is currently holding, grouped by Captain, with a one-click "Mark Settled" once physically handed back — built</li>
                             <li>In-app chat, text-only — both sides see it on the Prescription page with a manual Refresh button plus an opt-in "Auto-refresh (10s)" toggle; no live push, this is a polling pull, not sockets — built</li>
-                            <li>In-app notifications, Store/Captain/Customer — one database-backed notification per lifecycle event (new request in queue, claimed, estimate sent, accepted/rejected, Captain assigned, delivered, COD settled, new chat message); shows as a bell-icon dropdown (Store/Captain topbar, Customer's own bell) with an unread badge, plus the same unread count as a red pill next to "Dashboard" in the sidenav (Customer: next to "My Prescriptions", no sidebar there) — built. Admin isn't wired in (out of scope)</li>
+                            <li>In-app notifications, Store/Captain/Customer — one database-backed notification per lifecycle event (new request in queue, claimed, estimate sent, accepted/rejected, Captain assigned, delivered, COD settled, new chat message); shows as a bell-icon dropdown (Store/Captain topbar, Customer's own bell) with an unread badge — built. Admin isn't wired in (out of scope)</li>
+                            <li>Sidenav nav badges are state-driven, not raw unread-notification counts: Store's "Prescriptions" item counts orders not yet delivered, its "COD Settlements" item counts delivered COD orders not yet settled (so settling one moves the count off Prescriptions and onto COD Settlements, then clears it); Captain's own "Notifications" item keeps the plain unread count (Customer: next to "My Prescriptions", no sidebar there) — built</li>
+                            <li>Auto-generated Order ID (<code>PREFIX-000123</code>) minted the moment a Prescription reaches <code>confirmed</code> — prefix is Store-configurable on My Store Profile ("Order Numbering"), defaults to "OD" — built</li>
+                            <li>PDF delivery bill per order (dompdf) once a Captain is assigned — Store/Captain view inline, Customer downloads — shared <code>PrescriptionBillController</code> across all three roles — built</li>
+                            <li>Store Ledger (<code>/store/ledger</code>) — accounting register over every delivered order's payment: today's/month's sales, cash received vs. pending COD, a daily summary table, and a filterable per-order DataTable — built</li>
                             <li><strong>Pending:</strong> Image attachments in chat — text-only for now</li>
                             <li><strong>Pending:</strong> Admin compliance audit view across all Stores' Prescriptions</li>
                             <li><strong>Pending:</strong> A real Orders table once Cart/Checkout (Phase 4) exists — today "confirmed" lives on the Prescription itself</li>

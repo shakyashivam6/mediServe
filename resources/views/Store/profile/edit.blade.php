@@ -127,6 +127,21 @@
                             </div>
                         </div>
 
+                        <h5 class="fs-14 text-uppercase text-muted mb-2 mt-3">Order Numbering</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="order_prefix" class="form-label">Order ID Prefix <span class="text-muted">(optional)</span></label>
+                                <input type="text" name="order_prefix" id="order_prefix" maxlength="10" style="text-transform:uppercase;"
+                                    class="form-control @error('order_prefix') is-invalid @enderror"
+                                    value="{{ old('order_prefix', $store->order_prefix) }}" placeholder="OD">
+                                <div class="form-text">
+                                    Used for this store's auto-generated Order IDs once an order is confirmed — e.g.
+                                    "{{ old('order_prefix', $store->order_prefix) ?: 'OD' }}-000123". Leave blank to use the default "OD" prefix.
+                                </div>
+                                @error('order_prefix')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+
                         @include('Admin.partials.map-picker')
 
                         <div class="row">

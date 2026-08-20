@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
     'shop_name',
     'license_no',
     'gst_no',
+    'order_prefix',
     'latitude',
     'longitude',
     'delivery_radius_km',

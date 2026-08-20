@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
+    'order_number',
     'user_id',
     'store_id',
     'captain_id',
@@ -156,6 +157,32 @@ class Prescription extends Model
             'dispatched' => 'Out for Delivery',
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };
+    }
+
+    /**
+     * Next sequential Order ID under the given prefix, in "PREFIX-000001"
+     * form — same "scan existing rows for the max, don't track a counter"
+     * approach as User::generateLoginId(), so it stays correct even if rows
+     * are deleted. `$prefix` is the claiming Store's own Store::order_prefix
+     * (set on its self-service profile screen); null/blank falls back to
+     * the platform default "OD" — see the add_order_prefix_to_stores_table
+     * migration. Called once, the moment an order is actually finalised
+     * (status turns `confirmed` — see Store\PrescriptionController::update
+     * and Customer\PrescriptionController::accept, the two places a
+     * Prescription can reach that status), not at upload time, since
+     * plenty of uploads never make it past a phone call.
+     */
+    public static function generateOrderNumber(?string $prefix): string
+    {
+        $prefix = strtoupper(trim((string) $prefix)) ?: 'OD';
+
+        $lastNumber = static::query()
+            ->where('order_number', 'like', $prefix.'-%')
+            ->pluck('order_number')
+            ->map(fn (string $orderNumber) => (int) substr($orderNumber, strlen($prefix) + 1))
+            ->max() ?? 0;
+
+        return $prefix.'-'.str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
     }
 
     public function isCod(): bool

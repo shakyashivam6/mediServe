@@ -49,6 +49,11 @@ class ProfileController extends Controller
             'shop_name' => ['required', 'string', 'max:191'],
             'license_no' => ['nullable', 'string', 'max:100'],
             'gst_no' => ['nullable', 'string', 'max:100'],
+            // Letters/digits only — this becomes the literal "PREFIX-000123"
+            // Order ID text (see Prescription::generateOrderNumber), so
+            // spaces/punctuation would just make it awkward to read/say out
+            // loud on a call.
+            'order_prefix' => ['nullable', 'string', 'max:10', 'alpha_num'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'delivery_radius_km' => ['nullable', 'integer', 'min:0', 'max:65535'],
@@ -71,6 +76,7 @@ class ProfileController extends Controller
             'shop_name' => $data['shop_name'],
             'license_no' => $data['license_no'] ?? null,
             'gst_no' => $data['gst_no'] ?? null,
+            'order_prefix' => isset($data['order_prefix']) ? strtoupper($data['order_prefix']) : null,
             'latitude' => $data['latitude'] ?? null,
             'longitude' => $data['longitude'] ?? null,
             'delivery_radius_km' => $data['delivery_radius_km'] ?? null,

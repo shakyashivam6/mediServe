@@ -117,6 +117,14 @@ class PrescriptionController extends Controller
         $prescription->update([
             'status' => 'confirmed',
             'customer_decided_at' => now(),
+            // Order is now final — mint its Order ID under the claiming
+            // Store's own prefix, same as the Store-driven confirm path in
+            // Store\PrescriptionController::update() (guarded there too;
+            // this is the only other place a Prescription reaches
+            // `confirmed`, see Prescription::generateOrderNumber).
+            ...(! $prescription->order_number
+                ? ['order_number' => Prescription::generateOrderNumber($prescription->store?->store?->order_prefix)]
+                : []),
         ]);
 
         $prescription->store?->notify(new PrescriptionEventNotification(

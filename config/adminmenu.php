@@ -128,6 +128,12 @@ return [
             'permission' => null,
         ],
         [
+            'label' => 'Store Ledger',
+            'icon' => 'ri-book-2-line',
+            'route' => 'store.ledger.index',
+            'permission' => null,
+        ],
+        [
             'label' => 'Notifications',
             'icon' => 'ri-notification-3-line',
             'route' => 'store.notifications.index',

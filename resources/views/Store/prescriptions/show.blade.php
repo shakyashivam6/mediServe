@@ -20,7 +20,12 @@
         <div class="col-12">
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
-                    <h4 class="mb-0">Prescription #{{ $prescription->id }}</h4>
+                    <h4 class="mb-0">
+                        Prescription #{{ $prescription->id }}
+                        @if ($prescription->order_number)
+                            <span class="text-muted fs-15">&middot; Order {{ $prescription->order_number }}</span>
+                        @endif
+                    </h4>
                     <span class="badge bg-{{ $variant }}">{{ $isUnclaimed ? 'New — unclaimed' : ucfirst(str_replace('_', ' ', $prescription->status)) }}</span>
                     @if ($prescription->payment_method)
                         <span class="badge bg-{{ $prescription->isCodAmountPending() ? 'danger' : ($prescription->isCodAwaitingSettlement() ? 'warning' : 'secondary') }}">
