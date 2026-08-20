@@ -1,10 +1,3 @@
-{{--
-    Store panel layout — kept as its own file rather than reusing
-    admin-layout.blade.php so the two areas can diverge freely later. Same
-    HighDmin theme chrome, same common.sidenav include; the sidenav itself
-    switches to the Store menu based on auth()->user()->role (see
-    config/adminmenu.php).
---}}
 @props(['title' => 'Dashboard'])
 <!DOCTYPE html>
 <html lang="en">
@@ -13,8 +6,8 @@
     <meta charset="utf-8" />
     <title>{{ $title }} | {{ config('app.name') }} Store Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
-    <meta content="Coderthemes" name="author" />
+    <meta content="{{ config('app.name') }} Store Panel — manage your store profile, captains, prescription orders and COD settlements." name="description" />
+    <meta content="TejaswebThemes" name="author" />
     <base href="{{ url('/') }}">
 
     <!-- App favicon -->
@@ -97,148 +90,25 @@
                     </div>
 
                     <!-- Button Trigger Search Modal -->
-                    <div class="topbar-search d-none d-xl-flex gap-2 me-2 align-items-center" data-bs-toggle="modal"
+                    <!-- <div class="topbar-search d-none d-xl-flex gap-2 me-2 align-items-center" data-bs-toggle="modal"
                         data-bs-target="#searchModal" type="button">
                         <i class="ri-search-line fs-18"></i>
                         <span class="me-2">Search something..</span>
-                    </div>
+                    </div> -->
 
                     <!-- Language Dropdown -->
-                    <div class="topbar-item">
-                        <div class="dropdown">
-                            <button class="topbar-link" data-bs-toggle="dropdown" data-bs-offset="0,32" type="button"
-                                aria-haspopup="false" aria-expanded="false">
-                                <img src="assets/images/flags/us.svg" alt="user-image" class="w-100 rounded" height="18"
-                                    id="selected-language-image">
-                            </button>
-
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item" data-translator-lang="en">
-                                    <img src="assets/images/flags/us.svg" alt="user-image" class="me-1 rounded" height="18"
-                                        data-translator-image> <span class="align-middle">English</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item" data-translator-lang="hi">
-                                    <img src="assets/images/flags/in.svg" alt="user-image" class="me-1 rounded" height="18"
-                                        data-translator-image> <span class="align-middle">Hindi</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="assets/images/flags/de.svg" alt="user-image" class="me-1 rounded" height="18">
-                                    <span class="align-middle">German</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="assets/images/flags/it.svg" alt="user-image" class="me-1 rounded" height="18">
-                                    <span class="align-middle">Italian</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="assets/images/flags/es.svg" alt="user-image" class="me-1 rounded" height="18">
-                                    <span class="align-middle">Spanish</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item">
-                                    <img src="assets/images/flags/ru.svg" alt="user-image" class="me-1 rounded" height="18">
-                                    <span class="align-middle">Russian</span>
-                                </a>
-
-                            </div>
-                        </div>
-                    </div>
+                    <!--  -->
 
                     <!-- Notification Dropdown -->
                     @include('common.notifications-dropdown', ['rolePrefix' => 'store'])
 
-                    <!-- Apps Dropdown -->
-                    <div class="topbar-item d-none d-sm-flex">
-                        <div class="dropdown">
-                            <button class="topbar-link dropdown-toggle drop-arrow-none" data-bs-toggle="dropdown"
-                                data-bs-offset="0,25" type="button" aria-haspopup="false" aria-expanded="false">
-                                <i class="ri-apps-2-add-line fs-22"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg p-0">
-                                <div class="p-2">
-                                    <div class="row g-0">
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/slack.svg" alt="slack">
-                                                <span>Slack</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/gitlab.svg" alt="Github">
-                                                <span>Gitlab</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/dribbble.svg" alt="dribbble">
-                                                <span>Dribbble</span>
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-0">
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/bitbucket.svg" alt="bitbucket">
-                                                <span>Bitbucket</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/dropbox.svg" alt="dropbox">
-                                                <span>Dropbox</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/google-cloud.svg" alt="G Suite">
-                                                <span>G Cloud</span>
-                                            </a>
-                                        </div>
-                                    </div> <!-- end row-->
-
-                                    <div class="row g-0">
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/aws.svg" alt="bitbucket">
-                                                <span>AWS</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/digital-ocean.svg" alt="dropbox">
-                                                <span>Server</span>
-                                            </a>
-                                        </div>
-                                        <div class="col">
-                                            <a class="dropdown-icon-item" href="#">
-                                                <img src="assets/images/brands/bootstrap.svg" alt="G Suite">
-                                                <span>Bootstrap</span>
-                                            </a>
-                                        </div>
-                                    </div> <!-- end row-->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Button Trigger Customizer Offcanvas -->
-                    <div class="topbar-item d-none d-sm-flex">
+                    <!-- <div class="topbar-item d-none d-sm-flex">
                         <button class="topbar-link" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas"
                             type="button">
                             <i class="ri-settings-4-line fs-22"></i>
                         </button>
-                    </div>
+                    </div> -->
 
                     <!-- Light/Dark Mode Button -->
                     <div class="topbar-item d-none d-sm-flex">

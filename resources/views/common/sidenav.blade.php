@@ -108,6 +108,17 @@
             // gets a PrescriptionEventNotification fired at it, so this is
             // always 0 there and the badge just never renders.
             $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
+            // Every unread notification here is a prescription-lifecycle
+            // event, so the badge belongs on the nav item that actually
+            // leads to that activity — Prescriptions for Store. Captain has
+            // no Prescriptions tab, so its Notifications item carries the
+            // badge instead. Admin never has unread notifications, so this
+            // stays unused there.
+            $badgeTargetLabel = match (auth()->user()->role) {
+                'store' => 'Prescriptions',
+                'captain' => 'Notifications',
+                default => null,
+            };
         @endphp
         <ul class="side-nav">
             <li class="side-nav-title">Navigation</li>
@@ -145,7 +156,7 @@
                         <a href="{{ route($item['route']) }}" class="side-nav-link">
                             <span class="menu-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <span class="menu-text"> {{ $item['label'] }} </span>
-                            @if ($item['label'] === 'Dashboard' && $unreadNotificationCount > 0)
+                            @if ($item['label'] === $badgeTargetLabel && $unreadNotificationCount > 0)
                                 <span class="badge bg-danger rounded-pill">{{ $unreadNotificationCount }}</span>
                             @endif
                         </a>
