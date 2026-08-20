@@ -40,7 +40,7 @@
                     <p class="text-muted fs-14 mb-4">Don't have an account? <a href="auth-register.html" class="fw-semibold text-danger ms-1">Sign Up !</a></p>
 
                     <p class="mt-auto mb-0">
-                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold text-decoration-underline text-uppercase text-reset fs-12"><a href="https://tejasweb.com/">Tejes Web Solution</a></span>
+                        <script>document.write(new Date().getFullYear())</script> © By <span class="fw-bold  text-reset fs-12"><a href="https://tejasweb.com/">Tejes Web Solution</a></span>
                     </p>
                 </div>
             </div>
