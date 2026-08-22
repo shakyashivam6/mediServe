@@ -284,12 +284,7 @@
                         </a>
                     </div>
 
-                    <hr class="my-3">
-
-                    <p class="text-muted font-13 mb-0">
-                        Orders and Stock modules aren't built yet — they'll show up here once those parts of the
-                        platform ship (see the <a href="{{ route('roadmap') }}">roadmap</a>).
-                    </p>
+                    
                 </div>
             </div>
         </div>
