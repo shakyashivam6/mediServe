@@ -20,6 +20,29 @@ use Yajra\DataTables\Facades\DataTables;
  */
 class ProductController extends Controller
 {
+    public function downloadSample()
+    {
+        $headers = [
+            'item_id', 'drug name', 'composition', 'manufacturer', 'mrp', 'price',
+            'packaging', 'use of medicine', 'image0', 'image1', 'image2', 'image3',
+            'image4', 'image5', 'image6', 'image7', 'image8', 'image9',
+        ];
+        $sample = [
+            'sample-vitamin-c-500-tablet', 'Sample Vitamin C 500 mg Tablet',
+            'Ascorbic Acid 500 mg', 'Sample Pharma', '120.00', '99.00',
+            '10 tablets in 1 strip', 'Sample entry for CSV import; replace with your product data.',
+            '', '', '', '', '', '', '', '', '', '',
+        ];
+
+        return response()->streamDownload(function () use ($headers, $sample) {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, $headers);
+            fputcsv($output, $sample);
+            fclose($output);
+        }, 'mediserve-products-sample.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {

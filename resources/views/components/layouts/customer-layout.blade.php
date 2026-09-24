@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets/css/searchable-selects.css') }}" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -68,5 +69,6 @@
     </main>
 
     <footer>{{ config('app.name', 'MediServe') }} — Customer</footer>
+    <script src="{{ asset('assets/js/searchable-selects.js') }}"></script>
 </body>
 </html>

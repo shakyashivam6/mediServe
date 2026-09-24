@@ -18,9 +18,14 @@
                             <h4 class="header-title mb-1">Products</h4>
                             <p class="text-muted font-14 mb-0">{{ number_format($productCount) }} product(s) in the master catalog. Click Rx / Active to toggle either flag.</p>
                         </div>
-                        <a href="{{ route('admin.products.import') }}" class="btn btn-primary">
-                            <i class="ri-upload-2-line align-middle me-1"></i> Import from CSV/Excel
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ route('admin.products.sample') }}" class="btn btn-light">
+                                <i class="ri-download-2-line align-middle me-1"></i> Download sample CSV
+                            </a>
+                            <a href="{{ route('admin.products.import') }}" class="btn btn-primary">
+                                <i class="ri-upload-2-line align-middle me-1"></i> Import from CSV/Excel
+                            </a>
+                        </div>
                     </div>
 
                     <div class="row g-2 mb-3">

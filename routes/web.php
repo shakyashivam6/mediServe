@@ -36,6 +36,7 @@ Route::get('/xt', function () {
 // at auth.login — point root there instead of duplicating it.
 Route::get('/', [StorefrontController::class, 'index'])->name('home');
 Route::get('/product-suggestions', [StorefrontController::class, 'suggestions'])->name('products.suggestions');
+Route::get('/products/{product}', [StorefrontController::class, 'show'])->name('products.show');
 Route::get('/prescription/upload', [StorefrontController::class, 'beginPrescriptionUpload'])->name('prescription.upload.start');
 Route::post('/cart/{product}', [StorefrontController::class, 'addToCart'])->name('cart.add');
 Route::patch('/cart/{product}', [StorefrontController::class, 'updateCartQuantity'])->name('cart.quantity');
@@ -106,6 +107,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     Route::middleware('permission:catalog.manage')->prefix('products')->name('products.')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('index');
+        Route::get('sample-csv', [ProductController::class, 'downloadSample'])->name('sample');
         Route::get('import', [ProductController::class, 'import'])->name('import');
         Route::post('import', [ProductController::class, 'processImport'])->name('import.store');
         Route::get('{product}/edit', [ProductController::class, 'edit'])->name('edit');

@@ -1,0 +1,9 @@
+.option-search-input {
+    display: block;
+    width: 100%;
+    margin: 0 0 .35rem;
+}
+
+.option-search-input:disabled {
+    cursor: not-allowed;
+}

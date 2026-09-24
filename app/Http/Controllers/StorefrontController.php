@@ -79,11 +79,27 @@ class StorefrontController extends Controller
             ->orderBy('name')->limit(8)->get(['id', 'name', 'manufacturer', 'composition', 'price']);
 
         return response()->json(['data' => $products->map(fn (Product $product) => [
+            'url' => route('products.show', $product),
             'name' => $product->name,
             'manufacturer' => $product->manufacturer,
             'composition' => Str::limit((string) $product->composition, 72),
             'price' => $product->price !== null ? '₹'.number_format((float) $product->price, 2) : 'Price on request',
         ])]);
+    }
+
+    public function show(Request $request, Product $product): View
+    {
+        abort_unless($product->is_active, 404);
+
+        $guestId = $this->guestId($request);
+        $userId = auth()->id();
+        $saved = DB::table('wishlist_items')->where('product_id', $product->id)
+            ->when($userId, fn ($query) => $query->where('user_id', $userId), fn ($query) => $query->where('guest_session_id', $guestId))
+            ->exists();
+        $quantity = (int) $this->cartQuery($request)->where('product_id', $product->id)->value('quantity');
+        $cartCount = (int) $this->cartQuery($request)->sum('quantity');
+
+        return view('storefront.show', compact('product', 'saved', 'quantity', 'cartCount'));
     }
 
     public function beginPrescriptionUpload(Request $request): RedirectResponse
