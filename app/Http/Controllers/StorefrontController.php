@@ -11,8 +11,18 @@ use Illuminate\View\View;
 
 class StorefrontController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|\Illuminate\Http\JsonResponse
     {
+        $request->validate([
+            'manufacturer' => ['nullable', 'string', 'max:191'],
+            'packaging' => ['nullable', 'string', 'max:191'],
+            'rx' => ['nullable', 'in:rx,otc'],
+            'deal' => ['nullable', 'in:discounted'],
+            'min_price' => ['nullable', 'numeric', 'min:0'],
+            'max_price' => ['nullable', 'numeric', 'min:0'],
+            'sort' => ['nullable', 'in:price_low,price_high,name_desc'],
+        ]);
+
         $guestId = $this->guestId($request);
         $userId = auth()->id();
         $savedIds = DB::table('wishlist_items')->where('user_id', $userId)
@@ -23,11 +33,35 @@ class StorefrontController extends Controller
             ->sum('quantity');
         $cartQuantities = $this->cartQuery($request)->pluck('quantity', 'product_id')->all();
 
-        $products = Product::query()->where('is_active', true)
+        $query = Product::query()->where('is_active', true)
             ->when($request->filled('q'), fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', '%'.$request->q.'%')->orWhere('manufacturer', 'like', '%'.$request->q.'%')->orWhere('composition', 'like', '%'.$request->q.'%')))
-            ->orderBy('name')->paginate(24)->withQueryString();
+            ->when($request->filled('manufacturer'), fn ($q) => $q->where('manufacturer', $request->input('manufacturer')))
+            ->when($request->filled('packaging'), fn ($q) => $q->where('packaging', 'like', '%'.$request->input('packaging').'%'))
+            ->when($request->input('rx') === 'rx', fn ($q) => $q->where('requires_prescription', true))
+            ->when($request->input('rx') === 'otc', fn ($q) => $q->where('requires_prescription', false))
+            ->when($request->input('deal') === 'discounted', fn ($q) => $q->whereNotNull('price')->whereNotNull('mrp')->whereColumn('mrp', '>', 'price'))
+            ->when($request->filled('min_price'), fn ($q) => $q->where('price', '>=', (float) $request->input('min_price')))
+            ->when($request->filled('max_price'), fn ($q) => $q->where('price', '<=', (float) $request->input('max_price')));
 
-        return view('storefront.index', compact('products', 'savedIds', 'cartCount', 'cartQuantities'));
+        match ($request->input('sort')) {
+            'price_low' => $query->orderByRaw('price IS NULL')->orderBy('price')->orderBy('name'),
+            'price_high' => $query->orderByRaw('price IS NULL')->orderByDesc('price')->orderBy('name'),
+            'name_desc' => $query->orderByDesc('name'),
+            default => $query->orderBy('name'),
+        };
+
+        $products = $query->paginate(24)->withQueryString();
+        $manufacturers = Product::query()->where('is_active', true)->whereNotNull('manufacturer')
+            ->where('manufacturer', '<>', '')->distinct()->orderBy('manufacturer')->pluck('manufacturer');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('storefront.partials.products', compact('products', 'savedIds', 'cartQuantities'))->render(),
+                'total' => $products->total(),
+            ]);
+        }
+
+        return view('storefront.index', compact('products', 'savedIds', 'cartCount', 'cartQuantities', 'manufacturers'));
     }
 
     public function suggestions(Request $request): \Illuminate\Http\JsonResponse
