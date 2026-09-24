@@ -5,11 +5,11 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\StoreController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Captain\CollectionReportController as CaptainCollectionReportController;
 use App\Http\Controllers\Captain\DashboardController as CaptainDashboardController;
 use App\Http\Controllers\Captain\DeliveryController as CaptainDeliveryController;
 use App\Http\Controllers\Customer\Auth\OtpAuthController as CustomerOtpAuthController;
+use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\Customer\PrescriptionController as CustomerPrescriptionController;
 use App\Http\Controllers\Customer\ProfileController as CustomerProfileController;
 use App\Http\Controllers\NotificationController;
@@ -34,7 +34,16 @@ Route::get('/xt', function () {
 // auth-register.html rather than the real customer OTP flow. The actual,
 // wired login page (with the working "customer login/sign up" link) lives
 // at auth.login — point root there instead of duplicating it.
-Route::middleware('guest')->get('/', [AuthenticatedSessionController::class, 'create'])->name('home');
+Route::get('/', [StorefrontController::class, 'index'])->name('home');
+Route::get('/product-suggestions', [StorefrontController::class, 'suggestions'])->name('products.suggestions');
+Route::get('/prescription/upload', [StorefrontController::class, 'beginPrescriptionUpload'])->name('prescription.upload.start');
+Route::post('/cart/{product}', [StorefrontController::class, 'addToCart'])->name('cart.add');
+Route::patch('/cart/{product}', [StorefrontController::class, 'updateCartQuantity'])->name('cart.quantity');
+Route::post('/wishlist/{product}', [StorefrontController::class, 'toggleWishlist'])->name('wishlist.toggle');
+Route::get('/wishlist', [StorefrontController::class, 'wishlist'])->name('wishlist.index');
+Route::get('/cart', [StorefrontController::class, 'cart'])->name('cart.index');
+Route::post('/cart/{product}/remove', [StorefrontController::class, 'removeFromCart'])->name('cart.remove');
+Route::get('/checkout', [StorefrontController::class, 'checkout'])->name('checkout');
 
 Route::get('/roadmap', function () {
     return view('roadmap');

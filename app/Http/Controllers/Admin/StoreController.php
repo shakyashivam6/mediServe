@@ -23,6 +23,7 @@ class StoreController extends Controller
             return DataTables::of(Store::query()->with('user'))
                 ->addColumn('shop_name', fn (Store $store) => $store->shop_name)
                 ->addColumn('owner', fn (Store $store) => $store->user->first_name.' '.$store->user->second_name)
+                ->addColumn('login_id', fn (Store $store) => $store->user->login_id)
                 ->addColumn('mobile', fn (Store $store) => $store->user->mobile)
                 ->addColumn('status', function (Store $store) {
                     $variant = ['pending' => 'warning', 'approved' => 'success', 'rejected' => 'danger'][$store->status];

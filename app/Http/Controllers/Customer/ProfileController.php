@@ -27,6 +27,7 @@ class ProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $wasIncomplete = ! $user->hasCompleteProfile();
 
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
@@ -40,6 +41,18 @@ class ProfileController extends Controller
         ]);
 
         $user->update($data);
+
+        if ($request->session()->pull('upload_prescription_after_otp')) {
+            return redirect()->route('customer.prescriptions.create')->with('status', 'Your details are saved. Upload your prescription.');
+        }
+
+        if ($request->session()->pull('checkout_after_otp')) {
+            return redirect()->route('checkout');
+        }
+
+        if ($wasIncomplete) {
+            return redirect()->route('home')->with('status', 'Your profile is ready.');
+        }
 
         return redirect()->route('customer.prescriptions.index')->with('status', 'Profile saved.');
     }

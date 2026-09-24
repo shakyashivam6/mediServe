@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -70,6 +71,10 @@ class OtpAuthController extends Controller
 
         $this->issueOtp($user);
 
+        if ($request->boolean('checkout')) {
+            $request->session()->put('checkout_after_otp', true);
+        }
+
         $request->session()->put('customer_otp_mobile', $user->mobile);
 
         return redirect()->route('customer.otp.show');
@@ -121,9 +126,29 @@ class OtpAuthController extends Controller
         // One-time use — rotate the code so it can't be replayed.
         $user->update(['otp' => (string) random_int(100000, 999999), 'otp_expires_at' => null]);
 
+        $guestId = $request->session()->get('guest_shopper_id');
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->forget('customer_otp_mobile');
+
+        if ($guestId) {
+            DB::transaction(function () use ($guestId, $user) {
+                foreach (['cart_items', 'wishlist_items'] as $table) {
+                    $guestItems = DB::table($table)->where('guest_session_id', $guestId)->get();
+                    foreach ($guestItems as $item) {
+                        $existing = DB::table($table)->where('user_id', $user->id)->where('product_id', $item->product_id)->first();
+                        if ($existing) {
+                            if ($table === 'cart_items') DB::table($table)->where('id', $existing->id)->update(['quantity' => min(99, $existing->quantity + $item->quantity), 'updated_at' => now()]);
+                            DB::table($table)->where('id', $item->id)->delete();
+                        } else {
+                            DB::table($table)->where('id', $item->id)->update(['guest_session_id' => null, 'user_id' => $user->id, 'updated_at' => now()]);
+                        }
+                    }
+                }
+                DB::table('guest_sessions')->where('id', $guestId)->delete();
+            });
+            $request->session()->forget('guest_shopper_id');
+        }
 
         // Name/alternate number/address are mandatory but never collected
         // during OTP itself — send an incomplete profile here first (see
@@ -134,7 +159,15 @@ class OtpAuthController extends Controller
                 ->with('status', 'Just a couple more details before you get started.');
         }
 
-        return redirect()->intended(route('customer.prescriptions.index', absolute: false));
+        if ($request->session()->pull('upload_prescription_after_otp')) {
+            return redirect()->route('customer.prescriptions.create');
+        }
+
+        if ($request->session()->pull('checkout_after_otp')) {
+            return redirect()->route('checkout');
+        }
+
+        return redirect()->route('home');
     }
 
     public function resend(Request $request): RedirectResponse

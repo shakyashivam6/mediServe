@@ -29,6 +29,7 @@
                             <tr>
                                 <th>Shop Name</th>
                                 <th>Owner</th>
+                                <th>Login ID</th>
                                 <th>Mobile</th>
                                 <th>Status</th>
                                 <th style="width: 130px;">Actions</th>
@@ -53,6 +54,7 @@
                     columns: [
                         { data: 'shop_name', name: 'shop_name' },
                         { data: 'owner', name: 'user.first_name', orderable: false },
+                        { data: 'login_id', name: 'user.login_id', orderable: false },
                         { data: 'mobile', name: 'user.mobile', orderable: false },
                         { data: 'status', name: 'status' },
                         { data: 'actions', name: 'actions', orderable: false, searchable: false },
