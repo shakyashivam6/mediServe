@@ -90,6 +90,11 @@ class User extends Authenticatable
         return $this->hasMany(Prescription::class, 'user_id');
     }
 
+    public function customerAddresses()
+    {
+        return $this->hasMany(CustomerAddress::class)->orderByDesc('is_default')->latest();
+    }
+
     /**
      * Prescriptions this Store has claimed/is handling, when role=store.
      */

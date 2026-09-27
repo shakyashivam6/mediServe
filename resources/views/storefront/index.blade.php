@@ -18,13 +18,13 @@
     <header class="nav"><div class="wrap navin">
         <a class="brand" href="{{ route('home') }}">medi<span>Serve</span></a>
         <div class="search-wrap"><form id="product-search" class="search" action="{{ route('home') }}" method="GET"><input id="product-search-input" name="q" value="{{ request('q') }}" placeholder="Search medicines, brands or ingredients" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="search-suggestions"><button type="submit">Search</button></form><div id="search-suggestions" class="search-suggestions" role="listbox" hidden></div></div>
-        <div class="navlinks"><a href="{{ route('wishlist.index') }}">♡ Wishlist</a><a href="{{ route('cart.index') }}">🛒 Cart (<span id="cart-count">{{ $cartCount }}</span>)</a><a class="login" href="{{ auth()->check() ? (auth()->user()->role === 'customer' ? route('customer.prescriptions.index') : route('dashboard')) : route('login') }}">{{ auth()->check() ? 'Account' : 'Login' }}</a></div>
+        <div class="navlinks"><a href="{{ route('wishlist.index') }}">♡ Wishlist</a><a href="{{ route('cart.index') }}">🛒 Cart (<span id="cart-count">{{ $cartCount }}</span>)</a><x-storefront-account-menu /></div>
     </div></header>
     <main class="wrap">
         @if (session('shop_status'))<div class="notice">{{ session('shop_status') }}</div>@endif
         <section class="hero"><div><div class="pill">Care that comes to you</div><h1>Everyday health, made a little easier.</h1><p>Find trusted medicines and wellness essentials in one place.</p><a class="btn" href="{{ route('prescription.upload.start') }}">Upload prescription</a></div><div class="hero-art" aria-hidden="true">💊🌿</div></section>
         <section id="products">
-            <div class="section-head"><div><h2 id="products-heading">{{ request('q') ? 'Search results' : 'Popular products' }}</h2><p class="sub"><span id="product-total">{{ $products->total() }}</span> products to support your wellbeing</p></div></div>
+            <div class="section-head"><div><h2 id="products-heading">{{ request('q') ? 'Search results' : 'Popular products' }}</h2></div></div>
             <!-- <form id="product-filters" class="filterbar" action="{{ route('home') }}" method="GET">
                 <div class="filter-field"><label for="manufacturer-filter">Brand / Manufacturer</label><select id="manufacturer-filter" name="manufacturer"><option value="">All brands</option>@foreach($manufacturers as $manufacturer)<option value="{{ $manufacturer }}" @selected(request('manufacturer') === $manufacturer)>{{ $manufacturer }}</option>@endforeach</select></div>
                 <div class="filter-field"><label for="rx-filter">Product type</label><select id="rx-filter" name="rx"><option value="">All products</option><option value="otc" @selected(request('rx') === 'otc')>Non-prescription</option><option value="rx" @selected(request('rx') === 'rx')>Prescription required</option></select></div>

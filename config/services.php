@@ -39,4 +39,12 @@ return [
         'key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'cashfree' => [
+        'app_id' => env('CASHFREE_APP_ID'),
+        'secret_key' => env('CASHFREE_SECRET_KEY'),
+        'api_version' => env('CASHFREE_API_VERSION', '2025-01-01'),
+        'base_url' => env('CASHFREE_BASE_URL', 'https://sandbox.cashfree.com/pg'),
+        'mode' => env('CASHFREE_MODE', 'sandbox'),
+    ],
+
 ];

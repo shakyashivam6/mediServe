@@ -45,6 +45,15 @@ Route::get('/wishlist', [StorefrontController::class, 'wishlist'])->name('wishli
 Route::get('/cart', [StorefrontController::class, 'cart'])->name('cart.index');
 Route::post('/cart/{product}/remove', [StorefrontController::class, 'removeFromCart'])->name('cart.remove');
 Route::get('/checkout', [StorefrontController::class, 'checkout'])->name('checkout');
+Route::middleware(['auth', 'account_role:customer', 'customer_profile_complete'])->group(function () {
+    Route::get('/orders', [StorefrontController::class, 'orders'])->name('orders.index');
+    Route::post('/checkout/address', [StorefrontController::class, 'selectCheckoutAddress'])->name('checkout.address');
+    Route::get('/checkout/review', [StorefrontController::class, 'checkoutReview'])->name('checkout.review');
+    Route::get('/checkout/payment', [StorefrontController::class, 'checkoutPayment'])->name('checkout.payment');
+    Route::post('/checkout/place-order', [StorefrontController::class, 'placeOrder'])->name('checkout.place');
+    Route::get('/checkout/cashfree/return', [StorefrontController::class, 'cashfreeReturn'])->name('checkout.cashfree.return');
+});
+Route::get('/checkout/complete/{order}', [StorefrontController::class, 'orderComplete'])->middleware(['auth', 'account_role:customer'])->name('checkout.complete');
 
 Route::get('/roadmap', function () {
     return view('roadmap');
@@ -207,6 +216,7 @@ Route::middleware(['auth', 'account_role:customer'])->prefix('customer')->name('
     // Customer can always reach the form that fixes it.
     Route::get('profile', [CustomerProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [CustomerProfileController::class, 'update'])->name('profile.update');
+    Route::get('addresses', [StorefrontController::class, 'customerAddresses'])->name('addresses.index');
 
     Route::middleware('customer_profile_complete')->group(function () {
         Route::get('prescriptions', [CustomerPrescriptionController::class, 'index'])->name('prescriptions.index');

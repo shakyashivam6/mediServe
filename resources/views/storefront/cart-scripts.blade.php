@@ -21,13 +21,34 @@
             document.querySelectorAll(`[data-product-id="${state.productId}"]`).forEach(card => {
                 const controls = card.querySelector('.product-quantity');
                 if (controls) {
-                    controls.style.display = 'flex';
+                    controls.style.display = Number(state.quantity) > 0 ? 'flex' : 'none';
                     controls.querySelector('[data-quantity]').textContent = state.quantity;
+                    const decreaseButton = controls.querySelector('[data-qty-step="-1"], [data-qty-remove]');
+                    if (decreaseButton && Number(state.quantity) > 0) {
+                        if (Number(state.quantity) === 1) {
+                            decreaseButton.removeAttribute('data-qty-step');
+                            decreaseButton.setAttribute('data-qty-remove', '');
+                            decreaseButton.setAttribute('aria-label', 'Remove from cart');
+                            decreaseButton.title = 'Remove from cart';
+                            decreaseButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>';
+                        } else {
+                            decreaseButton.removeAttribute('data-qty-remove');
+                            decreaseButton.removeAttribute('title');
+                            decreaseButton.setAttribute('data-qty-step', '-1');
+                            decreaseButton.setAttribute('aria-label', 'Decrease quantity');
+                            decreaseButton.textContent = '−';
+                        }
+                    }
                 }
                 const addButton = card.querySelector('.cart-add-form button');
-                if (addButton) addButton.textContent = 'Add another';
+                if (addButton) addButton.textContent = Number(state.quantity) > 0 ? 'Add another to cart' : 'Add to cart';
             });
             document.querySelectorAll(`[data-cart-row="${state.productId}"]`).forEach(row => {
+                if (Number(state.quantity) < 1) {
+                    row.remove();
+                    if (!document.querySelector('[data-cart-row]')) location.reload();
+                    return;
+                }
                 const quantity = row.querySelector('[data-quantity]');
                 if (quantity) quantity.textContent = state.quantity;
                 const total = row.querySelector('[data-line-total]');
@@ -63,6 +84,23 @@
     });
 
     document.addEventListener('click', async (event) => {
+        const removeButton = event.target.closest('[data-qty-remove]');
+        if (removeButton) {
+            const controls = removeButton.closest('.qty-control');
+            controls.querySelectorAll('button').forEach(el => el.disabled = true);
+            try {
+                await send(controls.dataset.removeUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': controls.querySelector('[name="_token"]').value },
+                });
+            } catch (error) {
+                notify(error.message, true);
+            } finally {
+                controls.querySelectorAll('button').forEach(el => el.disabled = false);
+            }
+            return;
+        }
+
         const button = event.target.closest('[data-qty-step]');
         if (!button) return;
         const controls = button.closest('.qty-control');

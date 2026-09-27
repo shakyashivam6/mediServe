@@ -14,7 +14,7 @@
 <body>
     <div class="topbar">
         <div class="wrap">
-            <div class="brand"><span class="dot"></span> {{ config('app.name', 'MediServe') }}</div>
+            <a class="brand" href="{{ route('home') }}" aria-label="MediServe home"><span class="dot"></span><span class="brand-name">medi<span>Serve</span></span></a>
             @auth
                 @php
                     $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
@@ -36,6 +36,8 @@
                             <span class="bell-dot"></span>
                         @endif
                     </a>
+                    <a href="{{ route('orders.index') }}">Your Orders</a>
+                    <a href="{{ route('customer.addresses.index') }}">View Address</a>
                     <a href="{{ route('customer.prescriptions.index') }}">
                         My Prescriptions
                         @if ($unreadPrescriptionCount > 0)

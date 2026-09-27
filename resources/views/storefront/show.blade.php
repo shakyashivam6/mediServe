@@ -15,7 +15,7 @@
     <header class="nav"><div class="wrap navin">
         <a class="brand" href="{{ route('home') }}">medi<span>Serve</span></a>
         <a class="back" href="{{ url()->previous() === route('products.show', $product) ? route('home') : url()->previous() }}">← Back to products</a>
-        <div class="navlinks"><a href="{{ route('wishlist.index') }}">♡ Wishlist</a><a href="{{ route('cart.index') }}">🛒 Cart (<span id="cart-count">{{ $cartCount }}</span>)</a><a class="account" href="{{ auth()->check() ? (auth()->user()->role === 'customer' ? route('customer.prescriptions.index') : route('dashboard')) : route('login') }}">{{ auth()->check() ? 'Account' : 'Login' }}</a></div>
+        <div class="navlinks"><a href="{{ route('wishlist.index') }}">♡ Wishlist</a><a href="{{ route('cart.index') }}">🛒 Cart (<span id="cart-count">{{ $cartCount }}</span>)</a><x-storefront-account-menu /></div>
     </div></header>
     <main class="wrap" data-product-id="{{ $product->id }}">
         <div class="crumb"><a href="{{ route('home') }}">Home</a> / {{ $product->name }}</div>
@@ -39,7 +39,7 @@
                     <form class="cart-add-form" method="POST" action="{{ route('cart.add', $product) }}" data-product-id="{{ $product->id }}">@csrf<button class="buy">{{ $quantity ? 'Add another to cart' : 'Add to cart' }}</button></form>
                     <form method="POST" action="{{ route('wishlist.toggle', $product) }}">@csrf<button class="wish" aria-label="{{ $saved ? 'Remove from wishlist' : 'Add to wishlist' }}">{{ $saved ? '♥' : '♡' }}</button></form>
                 </div>
-                <div class="qty-control product-quantity" data-quantity-url="{{ route('cart.quantity', $product) }}" style="{{ $quantity ? '' : 'display:none' }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><strong data-quantity>{{ $quantity }}</strong><button type="button" data-qty-step="1" aria-label="Increase quantity">+</button></div>
+                <div class="qty-control product-quantity" data-quantity-url="{{ route('cart.quantity', $product) }}" data-remove-url="{{ route('cart.remove', $product) }}" style="{{ $quantity ? '' : 'display:none' }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="button" @if($quantity <= 1) data-qty-remove aria-label="Remove from cart" title="Remove from cart" @else data-qty-step="-1" aria-label="Decrease quantity" @endif>@if($quantity <= 1)<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>@else − @endif</button><strong data-quantity>{{ $quantity }}</strong><button type="button" data-qty-step="1" aria-label="Increase quantity">+</button></div>
                 <div class="info-box">
                     @if($product->composition)<div class="info-row"><span class="info-label">Composition</span><span>{{ $product->composition }}</span></div>@endif
                     @if($product->packaging)<div class="info-row"><span class="info-label">Pack size</span><span>{{ $product->packaging }}</span></div>@endif

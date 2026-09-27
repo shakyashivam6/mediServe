@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\CustomerAddress;
+use App\Models\ShopOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -172,11 +176,14 @@ class StorefrontController extends Controller
         return view('storefront.wishlist', compact('items'));
     }
 
-    public function removeFromCart(Request $request, Product $product): RedirectResponse
+    public function removeFromCart(Request $request, Product $product): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $query = DB::table('cart_items')->where('product_id', $product->id);
         auth()->check() ? $query->where('user_id', auth()->id()) : $query->where('guest_session_id', $this->guestId($request));
         $query->delete();
+        if ($request->expectsJson()) {
+            return response()->json($this->cartState($request, $product) + ['message' => 'Item removed from your cart.']);
+        }
         return back()->with('shop_status', 'Item removed from your cart.');
     }
 
@@ -188,7 +195,278 @@ class StorefrontController extends Controller
             $request->session()->put('checkout_after_otp', true);
             return redirect()->route('customer.login')->with('status', 'Enter your mobile number to verify and continue checkout.');
         }
-        return view('storefront.checkout');
+        if (! auth()->user()->hasCompleteProfile()) {
+            $request->session()->put('checkout_after_otp', true);
+            return redirect()->route('customer.profile.edit');
+        }
+
+        $user = $request->user();
+        if (! $user->customerAddresses()->exists()) {
+            $user->customerAddresses()->create([
+                'label' => 'Profile address',
+                'recipient_name' => trim($user->first_name.' '.$user->second_name),
+                'mobile' => $user->mobile,
+                'address_line' => $user->address_line,
+                'pincode' => $user->pincode,
+                'is_default' => true,
+            ]);
+        }
+        $addresses = $user->customerAddresses()->get();
+
+        return view('storefront.checkout', compact('addresses'));
+    }
+
+    public function selectCheckoutAddress(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'address_id' => ['nullable', 'integer'],
+            'label' => ['required_without:address_id', 'nullable', 'in:Home,Office,Other'],
+            'recipient_name' => ['required_without:address_id', 'nullable', 'string', 'max:150'],
+            'mobile' => ['required_without:address_id', 'nullable', 'digits:10'],
+            'address_line' => ['required_without:address_id', 'nullable', 'string', 'max:1000'],
+            'pincode' => ['required_without:address_id', 'nullable', 'digits:6'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        ]);
+
+        if (! empty($data['address_id'])) {
+            $address = $request->user()->customerAddresses()->findOrFail($data['address_id']);
+        } else {
+            $address = $request->user()->customerAddresses()->create([
+                ...$data,
+                'is_default' => false,
+            ]);
+        }
+
+        $request->session()->put('checkout_address_id', $address->id);
+
+        return redirect()->route('checkout.review');
+    }
+
+    public function checkoutReview(Request $request): RedirectResponse|View
+    {
+        $address = $this->checkoutAddress($request);
+        if (! $address) return redirect()->route('checkout')->withErrors(['address' => 'Choose a delivery address to continue.']);
+        $items = $this->checkoutItems($request);
+        if ($items->isEmpty()) return redirect()->route('cart.index')->with('shop_status', 'Your cart is empty.');
+        $subtotal = $items->sum(fn ($item) => (float) ($item->price ?? 0) * $item->quantity);
+
+        return view('storefront.checkout-review', compact('items', 'subtotal', 'address'));
+    }
+
+    public function checkoutPayment(Request $request): RedirectResponse|View
+    {
+        $address = $this->checkoutAddress($request);
+        if (! $address) return redirect()->route('checkout');
+        $items = $this->checkoutItems($request);
+        if ($items->isEmpty()) return redirect()->route('cart.index')->with('shop_status', 'Your cart is empty.');
+        $subtotal = $items->sum(fn ($item) => (float) ($item->price ?? 0) * $item->quantity);
+
+        return view('storefront.checkout-payment', compact('items', 'subtotal', 'address'));
+    }
+
+    public function placeOrder(Request $request): RedirectResponse|View
+    {
+        $data = $request->validate(['payment_method' => ['required', 'in:cod,cashfree']]);
+        $address = $this->checkoutAddress($request);
+        if (! $address) return redirect()->route('checkout')->withErrors(['address' => 'Choose a delivery address to continue.']);
+
+        if ($data['payment_method'] === 'cashfree') {
+            return $this->startCashfreePayment($request, $address);
+        }
+
+        $order = $this->createShopOrder($request, $address, 'cod');
+        DB::table('cart_items')->where('user_id', $request->user()->id)->delete();
+        $request->session()->forget('checkout_address_id');
+
+        return redirect()->route('checkout.complete', $order);
+    }
+
+    private function createShopOrder(Request $request, CustomerAddress $address, string $paymentMethod): ShopOrder
+    {
+        return DB::transaction(function () use ($request, $address, $paymentMethod) {
+            $rows = DB::table('cart_items')->join('products', 'products.id', '=', 'cart_items.product_id')
+                ->where('cart_items.user_id', $request->user()->id)->where('products.is_active', true)
+                ->select('cart_items.product_id', 'cart_items.quantity', 'products.name', 'products.manufacturer', 'products.price')
+                ->lockForUpdate()->get();
+            abort_if($rows->isEmpty(), 422, 'Your cart is empty.');
+            abort_if($rows->contains(fn ($row) => $row->price === null), 422, 'An item in your cart is awaiting a price and cannot be ordered yet.');
+
+            $items = $rows->map(fn ($row) => [
+                'product_id' => $row->product_id,
+                'name' => $row->name,
+                'manufacturer' => $row->manufacturer,
+                'price' => (float) $row->price,
+                'quantity' => (int) $row->quantity,
+            ])->values()->all();
+            $subtotal = collect($items)->sum(fn ($item) => $item['price'] * $item['quantity']);
+            abort_if($subtotal <= 0, 422, 'The order total must be greater than zero.');
+
+            return ShopOrder::create([
+                'order_number' => 'MS-'.now()->format('ymd').'-'.strtoupper(Str::random(6)),
+                'user_id' => $request->user()->id,
+                'customer_address_id' => $address->id,
+                'items' => $items,
+                'subtotal' => $subtotal,
+                'delivery_address' => $address->recipient_name."\n".$address->mobile."\n".$address->address_line."\n".$address->pincode,
+                'latitude' => $address->latitude,
+                'longitude' => $address->longitude,
+                'payment_method' => $paymentMethod,
+                'payment_status' => 'pending',
+                'status' => $paymentMethod === 'cashfree' ? 'payment_pending' : 'placed',
+            ]);
+        });
+    }
+
+    private function startCashfreePayment(Request $request, CustomerAddress $address): RedirectResponse|View
+    {
+        $appId = config('services.cashfree.app_id');
+        $secret = config('services.cashfree.secret_key');
+        if (! $appId || ! $secret) {
+            return back()->withErrors(['payment' => 'Cashfree sandbox credentials are missing. Set CASHFREE_APP_ID and CASHFREE_SECRET_KEY in .env.']);
+        }
+
+        $order = $this->createShopOrder($request, $address, 'cashfree');
+        $order->update(['cashfree_order_id' => $order->order_number]);
+        $baseUrl = rtrim((string) config('services.cashfree.base_url'), '/');
+        $returnUrl = route('checkout.cashfree.return', absolute: true).'?order_id={order_id}';
+
+        try {
+            $response = Http::acceptJson()->asJson()->timeout(25)->withHeaders([
+                'x-client-id' => $appId,
+                'x-client-secret' => $secret,
+                'x-api-version' => config('services.cashfree.api_version', '2025-01-01'),
+            ])->post($baseUrl.'/orders', [
+                'order_id' => $order->cashfree_order_id,
+                'order_amount' => (float) $order->subtotal,
+                'order_currency' => 'INR',
+                'customer_details' => [
+                    'customer_id' => (string) $request->user()->id,
+                    'customer_name' => $address->recipient_name,
+                    'customer_email' => $request->user()->email ?: 'customer'.$request->user()->id.'@mediserve.local',
+                    'customer_phone' => $address->mobile,
+                ],
+                'order_meta' => ['return_url' => $returnUrl],
+                'order_note' => 'MediServe order '.$order->order_number,
+            ]);
+
+            if (! $response->successful() || ! $response->json('payment_session_id')) {
+                Log::warning('Cashfree sandbox order creation failed.', ['order' => $order->order_number, 'http_status' => $response->status()]);
+                $order->update(['payment_status' => 'failed', 'status' => 'payment_failed']);
+                return back()->withErrors(['payment' => 'Cashfree could not start the payment. Check sandbox credentials and try again.']);
+            }
+
+            $order->update(['cashfree_payment_session_id' => $response->json('payment_session_id')]);
+
+            return view('storefront.cashfree-redirect', [
+                'paymentSessionId' => $order->cashfree_payment_session_id,
+                'mode' => config('services.cashfree.mode', 'sandbox'),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('Cashfree sandbox request failed.', ['order' => $order->order_number, 'exception' => $exception::class]);
+            $order->update(['payment_status' => 'failed', 'status' => 'payment_failed']);
+
+            return back()->withErrors(['payment' => 'Cashfree is not reachable right now. Please try again.']);
+        }
+    }
+
+    public function cashfreeReturn(Request $request): RedirectResponse
+    {
+        $cashfreeOrderId = $request->query('order_id');
+        abort_unless(is_string($cashfreeOrderId) && $cashfreeOrderId !== '', 404);
+        $order = ShopOrder::where('user_id', $request->user()->id)
+            ->where('cashfree_order_id', $cashfreeOrderId)->firstOrFail();
+        $appId = config('services.cashfree.app_id');
+        $secret = config('services.cashfree.secret_key');
+        abort_unless($appId && $secret, 503, 'Cashfree credentials are not configured.');
+
+        try {
+            $baseUrl = rtrim((string) config('services.cashfree.base_url'), '/');
+            $response = Http::acceptJson()->timeout(20)->withHeaders([
+                'x-client-id' => $appId,
+                'x-client-secret' => $secret,
+                'x-api-version' => config('services.cashfree.api_version', '2025-01-01'),
+            ])->get($baseUrl.'/orders/'.rawurlencode($cashfreeOrderId).'/payments');
+
+            if ($response->successful()) {
+                $payments = collect($response->json());
+                $paidPayment = $payments->first(fn ($payment) =>
+                    ($payment['payment_status'] ?? null) === 'SUCCESS'
+                    && abs((float) ($payment['payment_amount'] ?? 0) - (float) $order->subtotal) < 0.01
+                    && ($payment['payment_currency'] ?? 'INR') === 'INR'
+                );
+
+                if ($paidPayment) {
+                    DB::transaction(function () use ($request, $order, $paidPayment) {
+                        $order->update([
+                            'payment_status' => 'paid',
+                            'status' => 'placed',
+                        ]);
+                        DB::table('cart_items')->where('user_id', $request->user()->id)->delete();
+                    });
+
+                    $request->session()->forget('checkout_address_id');
+
+                    return redirect()->route('checkout.complete', $order);
+                }
+
+                $failedPayment = $payments->contains(fn ($payment) => in_array(
+                    $payment['payment_status'] ?? null,
+                    ['FAILED', 'CANCELLED', 'USER_DROPPED'],
+                    true
+                ));
+                if ($failedPayment) {
+                    $order->update(['payment_status' => 'failed', 'status' => 'payment_failed']);
+                }
+            }
+        } catch (\Throwable $exception) {
+            Log::warning('Cashfree payment verification failed.', ['order' => $order->order_number, 'exception' => $exception::class]);
+        }
+
+        if ($order->customer_address_id) {
+            $request->session()->put('checkout_address_id', $order->customer_address_id);
+        }
+
+        return redirect()->route('checkout.payment')->withErrors(['payment' => 'Payment was not confirmed. Your cart is still saved; you can try again.']);
+    }
+
+    private function checkoutAddress(Request $request): ?CustomerAddress
+    {
+        $id = $request->session()->get('checkout_address_id');
+
+        return $id ? $request->user()->customerAddresses()->find($id) : null;
+    }
+
+    private function checkoutItems(Request $request)
+    {
+        return DB::table('cart_items')->join('products', 'products.id', '=', 'cart_items.product_id')
+            ->where('cart_items.user_id', $request->user()->id)->where('products.is_active', true)
+            ->select('cart_items.quantity', 'products.id', 'products.name', 'products.manufacturer', 'products.price', 'products.images')
+            ->get();
+    }
+
+    public function orderComplete(Request $request, ShopOrder $order): View
+    {
+        abort_unless($order->user_id === $request->user()->id, 404);
+
+        return view('storefront.order-complete', compact('order'));
+    }
+
+    public function orders(Request $request): View
+    {
+        $orders = ShopOrder::query()
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->paginate(10);
+
+        return view('storefront.orders', compact('orders'));
+    }
+
+    public function customerAddresses(Request $request): View
+    {
+        $addresses = $request->user()->customerAddresses()->get();
+
+        return view('Customer.profile.addresses', compact('addresses'));
     }
 
     private function guestId(Request $request): string

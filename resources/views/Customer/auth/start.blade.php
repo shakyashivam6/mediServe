@@ -1,6 +1,7 @@
 <x-layouts.customer-layout title="Log in">
 
-    <div class="card">
+    <div class="card login-card">
+        <div class="login-eyebrow">Care that comes to you</div>
         <h2 style="margin-top:0;">Welcome</h2>
         <p style="color:var(--ink-soft); font-size:14px; margin-top:-6px;">
             Enter your mobile number — we'll text you a one-time code. New here? This creates your account too.
