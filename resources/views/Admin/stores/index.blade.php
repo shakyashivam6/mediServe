@@ -18,9 +18,11 @@
                             <p class="text-muted font-14 mb-0">Pharmacies registered on the platform. New stores need approval before their login is active.</p>
                         </div>
                         @can('stores.manage')
+                            @if (! $hasStore)
                             <a href="{{ route('admin.stores.create') }}" class="btn btn-primary">
                                 <i class="ri-add-line align-middle me-1"></i> Add Store
                             </a>
+                            @endif
                         @endcan
                     </div>
 

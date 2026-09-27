@@ -50,7 +50,7 @@
             </div>
         </section>
     </main>
-    <footer class="footer"><div class="wrap">© {{ date('Y') }} MediServe · Your neighbourhood pharmacy, online.</div></footer>
+    <x-storefront-footer />
     <div class="notice cart-feedback" role="status" aria-live="polite"></div>
     @include('storefront.cart-scripts')
     <script>

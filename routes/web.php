@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CaptainController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Store\LedgerController as StoreLedgerController;
 use App\Http\Controllers\Store\PrescriptionController as StorePrescriptionController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Store\ProfileController as StoreProfileController;
+use App\Http\Controllers\Store\ShopOrderController as StoreShopOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/xt', function () {
@@ -109,6 +111,19 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('stores/{store}/approve', [StoreController::class, 'approve'])->name('stores.approve');
     Route::post('stores/{store}/reject', [StoreController::class, 'reject'])->name('stores.reject');
 
+    Route::get('orders', [AdminOrderController::class, 'index'])
+        ->name('orders.index')
+        ->middleware('permission:orders.view');
+    Route::get('orders/{order}', [AdminOrderController::class, 'show'])
+        ->name('orders.show')
+        ->middleware('permission:orders.view');
+    Route::post('orders/{order}/accept', [AdminOrderController::class, 'accept'])
+        ->name('orders.accept')
+        ->middleware('permission:orders.manage');
+    Route::post('orders/{order}/reject', [AdminOrderController::class, 'reject'])
+        ->name('orders.reject')
+        ->middleware('permission:orders.manage');
+
     Route::resource('captains', CaptainController::class)
         ->except(['show'])
         ->parameters(['captains' => 'captain'])
@@ -131,6 +146,11 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 // access here is gated by plain account_role, not permission:.
 Route::middleware(['auth', 'verified', 'account_role:store', 'store_profile_exists'])->prefix('store')->name('store.')->group(function () {
     Route::get('dashboard', [StoreDashboardController::class, 'index'])->name('dashboard');
+    Route::get('orders', [StoreShopOrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [StoreShopOrderController::class, 'show'])->name('orders.show');
+    Route::post('orders/{order}/accept', [StoreShopOrderController::class, 'accept'])->name('orders.accept');
+    Route::post('orders/{order}/reject', [StoreShopOrderController::class, 'reject'])->name('orders.reject');
+    Route::post('orders/{order}/assign-captain', [StoreShopOrderController::class, 'assignCaptain'])->name('orders.assign-captain');
 
     Route::get('profile', [StoreProfileController::class, 'edit'])->name('profile.edit');
     Route::put('profile', [StoreProfileController::class, 'update'])->name('profile.update');

@@ -40,7 +40,7 @@ class RolePermissionSeeder extends Seeder
         'Super Admin' => '*',
         'Store Manager' => ['stores.view', 'stores.approve', 'stores.manage', 'captains.manage'],
         'Catalog Manager' => ['catalog.manage', 'coupons.manage'],
-        'Support Admin' => ['orders.view', 'prescriptions.review', 'content.manage'],
+        'Support Admin' => ['orders.view', 'orders.manage', 'prescriptions.review', 'content.manage'],
         'Finance Admin' => ['orders.view', 'reports.view'],
     ];
 

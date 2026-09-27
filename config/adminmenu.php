@@ -63,12 +63,12 @@ return [
         // Planned modules — uncomment once each one's routes/controller/views
         // exist. Permission slugs are already seeded (RolePermissionSeeder).
         //
-        // [
-        //     'label' => 'Orders',
-        //     'icon' => 'ri-file-list-3-line',
-        //     'route' => 'admin.orders.index',
-        //     'permission' => 'orders.view',
-        // ],
+        [
+            'label' => 'Orders',
+            'icon' => 'ri-file-list-3-line',
+            'route' => 'admin.orders.index',
+            'permission' => 'orders.view',
+        ],
         // [
         //     'label' => 'Prescriptions',
         //     'icon' => 'ri-file-text-line',
@@ -122,6 +122,12 @@ return [
             'permission' => null,
         ],
         [
+            'label' => 'Customer Orders',
+            'icon' => 'ri-shopping-bag-3-line',
+            'route' => 'store.orders.index',
+            'permission' => null,
+        ],
+        [
             'label' => 'COD Settlements',
             'icon' => 'ri-hand-coin-line',
             'route' => 'store.settlements.index',
@@ -148,12 +154,6 @@ return [
         //     'label' => 'Stock',
         //     'icon' => 'ri-archive-2-line',
         //     'route' => 'store.stock.index',
-        //     'permission' => null,
-        // ],
-        // [
-        //     'label' => 'Orders',
-        //     'icon' => 'ri-file-list-3-line',
-        //     'route' => 'store.orders.index',
         //     'permission' => null,
         // ],
         // [

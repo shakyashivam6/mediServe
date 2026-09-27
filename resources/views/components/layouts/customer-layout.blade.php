@@ -54,7 +54,7 @@
         {{ $slot }}
     </main>
 
-    <footer>{{ config('app.name', 'MediServe') }} — Customer</footer>
+    <x-storefront-footer />
     <script src="{{ asset('assets/js/searchable-selects.js') }}"></script>
 </body>
 </html>

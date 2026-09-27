@@ -51,7 +51,7 @@ class StoreController extends Controller
                 ->make(true);
         }
 
-        return view('Admin.stores.index');
+        return view('Admin.stores.index', ['hasStore' => Store::query()->exists()]);
     }
 
     /**
@@ -60,6 +60,10 @@ class StoreController extends Controller
     public function create()
     {
         abort_unless($this->canManage(), 403);
+
+        if (Store::query()->exists()) {
+            return redirect()->route('admin.stores.index')->with('status', 'Single-store mode is enabled. A second store cannot be added.');
+        }
 
         return view('Admin.stores.create', [
             'nextLoginId' => User::generateLoginId(),
@@ -73,6 +77,10 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         abort_unless($this->canManage(), 403);
+
+        if (Store::query()->exists()) {
+            return redirect()->route('admin.stores.index')->with('status', 'Single-store mode is enabled. A second store cannot be added.');
+        }
 
         $data = $this->validateRequest($request);
 

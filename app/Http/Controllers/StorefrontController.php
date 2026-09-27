@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\CustomerAddress;
 use App\Models\Prescription;
 use App\Models\ShopOrder;
+use App\Models\Store;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -242,6 +243,11 @@ class StorefrontController extends Controller
 
         $request->session()->put('checkout_address_id', $address->id);
 
+        if (! $this->addressIsDeliverable($address)) {
+            $request->session()->forget('checkout_address_id');
+            return redirect()->route('checkout')->with('delivery_error', 'Delivery not available at this location.');
+        }
+
         return redirect()->route('checkout.review');
     }
 
@@ -249,6 +255,7 @@ class StorefrontController extends Controller
     {
         $address = $this->checkoutAddress($request);
         if (! $address) return redirect()->route('checkout')->withErrors(['address' => 'Choose a delivery address to continue.']);
+        if (! $this->addressIsDeliverable($address)) return redirect()->route('checkout')->with('delivery_error', 'Delivery not available at this location.');
         $items = $this->checkoutItems($request);
         if ($items->isEmpty()) return redirect()->route('cart.index')->with('shop_status', 'Your cart is empty.');
         $subtotal = $items->sum(fn ($item) => (float) ($item->price ?? 0) * $item->quantity);
@@ -260,6 +267,7 @@ class StorefrontController extends Controller
     {
         $address = $this->checkoutAddress($request);
         if (! $address) return redirect()->route('checkout');
+        if (! $this->addressIsDeliverable($address)) return redirect()->route('checkout')->with('delivery_error', 'Delivery not available at this location.');
         $items = $this->checkoutItems($request);
         if ($items->isEmpty()) return redirect()->route('cart.index')->with('shop_status', 'Your cart is empty.');
         $subtotal = $items->sum(fn ($item) => (float) ($item->price ?? 0) * $item->quantity);
@@ -272,6 +280,7 @@ class StorefrontController extends Controller
         $data = $request->validate(['payment_method' => ['required', 'in:cod,cashfree']]);
         $address = $this->checkoutAddress($request);
         if (! $address) return redirect()->route('checkout')->withErrors(['address' => 'Choose a delivery address to continue.']);
+        if (! $this->addressIsDeliverable($address)) return redirect()->route('checkout')->with('delivery_error', 'Delivery not available at this location.');
 
         if ($data['payment_method'] === 'cashfree') {
             return $this->startCashfreePayment($request, $address);
@@ -439,6 +448,31 @@ class StorefrontController extends Controller
         return $id ? $request->user()->customerAddresses()->find($id) : null;
     }
 
+    private function addressIsDeliverable(CustomerAddress $address): bool
+    {
+        if (Store::query()->count() !== 1) return false;
+
+        $store = Store::query()->where('status', 'approved')
+            ->whereHas('user', fn ($query) => $query->where('isActive', true))
+            ->first();
+
+        if (! $store) return false;
+        // No configured radius means the approved store has no geographic restriction.
+        if ($store->delivery_radius_km === null) return true;
+
+        // A radius check cannot be made without both sets of coordinates.
+        if ($store->latitude === null || $store->longitude === null || $address->latitude === null || $address->longitude === null) return false;
+
+        $distanceKm = Prescription::haversineKm(
+            (float) $store->latitude,
+            (float) $store->longitude,
+            (float) $address->latitude,
+            (float) $address->longitude,
+        );
+
+        return $distanceKm <= $store->delivery_radius_km;
+    }
+
     private function checkoutItems(Request $request)
     {
         return DB::table('cart_items')->join('products', 'products.id', '=', 'cart_items.product_id')
@@ -474,8 +508,13 @@ class StorefrontController extends Controller
                 $order->setAttribute('history_status_label', match ($order->status) {
                     'payment_pending' => 'Payment pending',
                     'payment_failed' => 'Payment failed',
-                    default => ucfirst(str_replace('_', ' ', $order->status)),
+                    default => match ($order->fulfillment_status) {
+                        'accepted' => 'Accepted by store',
+                        'rejected' => 'Order rejected',
+                        default => 'Awaiting store response',
+                    },
                 });
+                $order->setAttribute('history_remark', $order->fulfillment_remark);
                 $order->setAttribute('history_payment_label', $order->payment_method === 'cashfree'
                     ? 'Cashfree · '.ucfirst($order->payment_status)
                     : 'Cash on delivery');

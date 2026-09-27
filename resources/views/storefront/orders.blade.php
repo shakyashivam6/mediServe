@@ -47,6 +47,9 @@
                     <span>Payment: {{ $order->history_payment_label }}</span>
                     <span>Delivery: {{ Str::limit($order->delivery_address, 90) }}</span>
                 </div>
+                @if($order->history_remark)
+                    <div class="meta" style="margin-top:0"><span>Store remark: {{ $order->history_remark }}</span></div>
+                @endif
                 @if((float) ($order->history_discount ?? 0) > 0)
                     <div class="meta" style="margin-top:0;color:#087f5b"><span>Instant discount: −₹{{ number_format((float) $order->history_discount, 2) }}</span></div>
                 @endif
@@ -60,5 +63,6 @@
         @endforelse
         @if($orders->hasPages())<div class="pagination">{{ $orders->links() }}</div>@endif
     </main>
+    <x-storefront-footer />
 </body>
 </html>
