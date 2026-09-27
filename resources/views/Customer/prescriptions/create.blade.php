@@ -1,4 +1,4 @@
-@php $mapsKey = config('services.google_maps.key'); @endphp
+﻿@php $mapsKey = config('services.google_maps.key'); @endphp
 
 <x-layouts.customer-layout title="Upload Prescription">
 
@@ -21,24 +21,24 @@
         <form method="POST" action="{{ route('customer.prescriptions.store') }}" enctype="multipart/form-data">
             @csrf
 
-            <label for="files">Prescription photo(s) or PDF</label>
+            <label for="files">Prescription photo(s) or PDF <span style="color:var(--red);">*</span></label>
             <input type="file" id="files" name="files[]" accept="image/*,.pdf" multiple required>
             <div class="hint">Up to 5 files, 10MB each. Multiple pages? Add each as a separate file.</div>
 
             <label for="remark">Remark <span style="font-weight:400; color:var(--ink-faint);">(optional)</span></label>
             <textarea id="remark" name="remark" placeholder="e.g. This is a refill for my father, please call before 6pm">{{ old('remark') }}</textarea>
 
-            <label for="delivery_address">Delivery address</label>
+            <label for="delivery_address">Delivery address <span style="color:var(--red);">*</span></label>
             <textarea id="delivery_address" name="delivery_address" placeholder="Full address for delivery" required>{{ old('delivery_address', $savedAddress) }}</textarea>
             @if ($savedAddress)
-                <div class="hint">Filled in from your last order — edit it if this delivery is going somewhere else.</div>
+                <div class="hint">Filled in from your last order â€” edit it if this delivery is going somewhere else.</div>
             @endif
 
             <div style="margin-top:14px; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:10px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                     <div>
-                        <strong style="font-size:13px;">Delivery location</strong>
-                        <div class="hint" style="margin-top:2px;">Optional — pin it on the map, or use your current location.</div>
+                        <strong style="font-size:13px;">Delivery location <span style="color:var(--red);">*</span></strong>
+                        <div class="hint" style="margin-top:2px;">Required - select a point on the map or use your current location.</div>
                     </div>
                     <button type="button" id="share-location" class="btn btn-soft" style="width:auto; margin:0; white-space:nowrap;">
                         <i class="ri-crosshair-2-line"></i> Use current location
@@ -52,17 +52,17 @@
                 @if ($mapsKey)
                     <div id="customer-map" style="height:220px; border:1px solid var(--line); border-radius:10px; margin-top:10px;"></div>
                     <div id="customer-map-error" class="hint" style="display:none; margin-top:6px;">
-                        Map couldn't load — you can still use "Use current location" above, or just type your address.
+                        Map couldn't load â€” you can still use "Use current location" above, or just type your address.
                     </div>
                 @else
                     <div class="hint" style="margin-top:10px;">
-                        Map picker isn't set up yet — use "Use current location" above, or just type your address.
+                        Map picker isn't set up yet â€” use "Use current location" above, or just type your address.
                     </div>
                 @endif
 
                 <p id="location-status" class="hint" style="margin:8px 0 0; @if ($savedLatitude && $savedLongitude) color:var(--green); @endif">
                     @if ($savedLatitude && $savedLongitude)
-                        Using the location from your last order — drag the pin to update it.
+                        Using the location from your last order â€” drag the pin to update it.
                     @endif
                 </p>
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $savedLatitude) }}">
@@ -79,6 +79,16 @@
             const statusEl = document.getElementById('location-status');
             const latInput = document.getElementById('latitude');
             const lngInput = document.getElementById('longitude');
+            const form = document.querySelector('form[enctype="multipart/form-data"]');
+
+            form.addEventListener('submit', function (event) {
+                if (!latInput.value || !lngInput.value) {
+                    event.preventDefault();
+                    statusEl.textContent = 'Please select your delivery location on the map or use your current location.';
+                    statusEl.style.color = 'var(--red)';
+                    document.getElementById('customer-map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
 
             function setLocation(lat, lng, message) {
                 latInput.value = lat.toFixed(7);
@@ -103,10 +113,10 @@
 
                 const originalHtml = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = 'Locating…';
+                btn.innerHTML = 'Locatingâ€¦';
 
                 navigator.geolocation.getCurrentPosition(function (position) {
-                    setLocation(position.coords.latitude, position.coords.longitude, 'Location captured ✓');
+                    setLocation(position.coords.latitude, position.coords.longitude, 'Location captured âœ“');
                     btn.disabled = false;
                     btn.innerHTML = originalHtml;
                 }, function (error) {
@@ -121,7 +131,7 @@
 
     @if ($mapsKey)
         <script>
-            // Google calls this globally when the key itself is rejected — bad
+            // Google calls this globally when the key itself is rejected â€” bad
             // key, Maps JavaScript API not enabled, billing off, or the current
             // domain not allowed by the key's referrer restrictions. Swap the
             // map for the plain fallback hint instead of leaving it broken.
@@ -159,7 +169,7 @@
                 function setFromLatLng(latLng) {
                     latInput.value = latLng.lat().toFixed(7);
                     lngInput.value = latLng.lng().toFixed(7);
-                    statusEl.textContent = 'Location set on map ✓';
+                    statusEl.textContent = 'Location set on map âœ“';
                     statusEl.style.color = 'var(--green)';
                 }
 

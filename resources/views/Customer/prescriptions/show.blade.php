@@ -21,6 +21,7 @@
         </div>
         @if ($prescription->order_number)
             <p class="hint" style="margin-top:4px;">Order ID: <strong>{{ $prescription->order_number }}</strong></p>
+            <a href="{{ route('orders.index', ['prescription' => $prescription->id]) }}#order-prescription-{{ $prescription->id }}" style="display:inline-block; margin-top:8px; color:var(--green); font-weight:700; text-decoration:underline;">View this prescription order in order history</a>
         @endif
         <p style="color:var(--ink-soft); font-size:13.5px; margin:8px 0 0;">{{ $statusCopy }}</p>
         <p class="hint" style="margin-top:4px;">Uploaded {{ $prescription->created_at->format('d M Y, h:i A') }}</p>
@@ -58,6 +59,9 @@
                 </table>
             @endif
 
+            @if ((float) $prescription->discount_amount > 0)
+                <p style="margin:0 0 6px; color:var(--green);">Instant discount: −₹{{ number_format((float) $prescription->discount_amount, 2) }}</p>
+            @endif
             @if ($prescription->total_amount !== null)
                 <p style="font-weight:700; font-size:16px; margin:0 0 14px;">Total: ₹{{ number_format((float) $prescription->total_amount, 2) }}</p>
             @endif
@@ -132,8 +136,11 @@
                     @endforeach
                 </tbody>
             </table>
+            @if ((float) $prescription->discount_amount > 0)
+                <p style="margin:10px 0 0; color:var(--green);">Instant discount: −₹{{ number_format((float) $prescription->discount_amount, 2) }}</p>
+            @endif
             @if ($prescription->total_amount !== null)
-                <p style="font-weight:700; margin:10px 0 0;">Total: ₹{{ number_format((float) $prescription->total_amount, 2) }}</p>
+                <p style="font-weight:700; margin:4px 0 0;">Total: ₹{{ number_format((float) $prescription->total_amount, 2) }}</p>
             @endif
         </div>
     @endif

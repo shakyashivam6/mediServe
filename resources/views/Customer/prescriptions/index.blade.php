@@ -1,7 +1,7 @@
-<x-layouts.customer-layout title="My Prescriptions">
+<x-layouts.customer-layout title="Prescription History">
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;">
-        <h2 style="margin:0;">My Prescriptions</h2>
+        <h2 style="margin:0;">Prescription History</h2>
         <a href="{{ route('customer.prescriptions.create') }}" class="btn" style="width:auto; margin:0;">+ Upload New</a>
     </div>
 

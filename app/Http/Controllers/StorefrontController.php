@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\CustomerAddress;
+use App\Models\Prescription;
 use App\Models\ShopOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
 class StorefrontController extends Controller
@@ -454,10 +456,63 @@ class StorefrontController extends Controller
 
     public function orders(Request $request): View
     {
-        $orders = ShopOrder::query()
+        $selectedPrescription = null;
+        if ($request->filled('prescription')) {
+            $selectedPrescription = Prescription::query()
+                ->where('user_id', $request->user()->id)
+                ->whereIn('status', ['confirmed', 'dispatched', 'delivered'])
+                ->findOrFail($request->integer('prescription'));
+        }
+
+        $shopOrders = ($selectedPrescription ? collect() : ShopOrder::query()
             ->where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate(10);
+            ->get())
+            ->map(function (ShopOrder $order) {
+                $order->setAttribute('history_type', 'shop');
+                $order->setAttribute('history_total', $order->subtotal);
+                $order->setAttribute('history_discount', 0);
+                $order->setAttribute('history_status_label', match ($order->status) {
+                    'payment_pending' => 'Payment pending',
+                    'payment_failed' => 'Payment failed',
+                    default => ucfirst(str_replace('_', ' ', $order->status)),
+                });
+                $order->setAttribute('history_payment_label', $order->payment_method === 'cashfree'
+                    ? 'Cashfree · '.ucfirst($order->payment_status)
+                    : 'Cash on delivery');
+                $order->setAttribute('history_url', $order->status === 'placed'
+                    ? route('checkout.complete', $order)
+                    : null);
+                return $order;
+            });
+
+        $prescriptionOrders = Prescription::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['confirmed', 'dispatched', 'delivered'])
+            ->when($selectedPrescription, fn ($query) => $query->whereKey($selectedPrescription->id))
+            ->get()
+            ->map(function (Prescription $prescription) {
+                $prescription->setAttribute('history_type', 'prescription');
+                $prescription->setAttribute('history_total', $prescription->total_amount);
+                $prescription->setAttribute('history_discount', $prescription->discount_amount);
+                $prescription->setAttribute('history_status_label', $prescription->customerStatusLabel());
+                $prescription->setAttribute('history_payment_label', $prescription->payment_method
+                    ? ($prescription->payment_method === 'cod' ? 'Cash on delivery' : 'Prepaid')
+                    : 'Payment method pending');
+                $prescription->setAttribute('history_url', route('customer.prescriptions.show', $prescription));
+                return $prescription;
+            });
+
+        $allOrders = $shopOrders->concat($prescriptionOrders)
+            ->sortByDesc('created_at')
+            ->values();
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $orders = new LengthAwarePaginator(
+            $allOrders->forPage($page, 10)->values(),
+            $allOrders->count(),
+            10,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()],
+        );
 
         return view('storefront.orders', compact('orders'));
     }

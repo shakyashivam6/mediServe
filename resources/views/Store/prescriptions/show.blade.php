@@ -135,7 +135,7 @@
         </div>
     </div>
 
-    @if ($isClaimedByMe && ! in_array($prescription->status, ['dispatched', 'delivered', 'rejected'], true))
+    @if ($isClaimedByMe && ! in_array($prescription->status, ['confirmed', 'dispatched', 'delivered', 'rejected'], true))
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -176,12 +176,22 @@
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="total_amount" class="form-label">Total Amount (₹)</label>
-                                    <input type="number" step="0.01" min="0" name="total_amount" id="total_amount" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount', $prescription->total_amount) }}">
-                                    <div class="form-text">Auto-summed from lines above — edit freely to add delivery charges etc.</div>
+                                    <label for="total_amount" class="form-label">Amount before discount (₹)</label>
+                                    <input type="number" step="0.01" min="0" name="total_amount" id="total_amount" class="form-control @error('total_amount') is-invalid @enderror" value="{{ old('total_amount', (float) $prescription->total_amount + (float) $prescription->discount_amount) }}">
+                                    <div class="form-text">Auto-summed from medicine lines. You can adjust it for delivery charges.</div>
                                     @error('total_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-                                <div class="col-md-8 mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label for="discount_amount" class="form-label">Instant discount (₹)</label>
+                                    <input type="number" step="0.01" min="0" name="discount_amount" id="discount_amount" class="form-control @error('discount_amount') is-invalid @enderror" value="{{ old('discount_amount', $prescription->discount_amount ?? 0) }}">
+                                    <div class="form-text">Discount is deducted from the customer payable total.</div>
+                                    @error('discount_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Customer pays</label>
+                                    <input type="text" id="payable_amount" class="form-control" readonly value="₹{{ number_format(max(0, (float) $prescription->total_amount), 2) }}">
+                                </div>
+                                <div class="col-md-12 mb-3">
                                     <label for="call_notes" class="form-label">Call notes</label>
                                     <textarea name="call_notes" id="call_notes" class="form-control" rows="2">{{ old('call_notes', $prescription->call_notes) }}</textarea>
                                 </div>
@@ -309,6 +319,20 @@
     @endif
 
     @if ($isClaimedByMe)
+        @push('styles')
+            <style>
+                #chat .chat-messages { display:flex; flex-direction:column; gap:12px; height:360px; max-height:55vh; min-height:220px; overflow-y:auto; padding:16px; background:#f8fafc; border:1px solid #e5eaf0; border-radius:10px; }
+                #chat .chat-message-row { display:flex; flex-direction:column; align-items:flex-start; width:100%; margin:0; }
+                #chat .chat-message-row.is-mine { align-items:flex-end; }
+                #chat .chat-bubble { display:block; width:fit-content; max-width:min(75%, 680px); min-height:0; height:auto; padding:10px 14px; border-radius:12px; background:#eef2f7; color:#344054; line-height:1.5; text-align:left; white-space:pre-wrap; overflow-wrap:anywhere; }
+                #chat .chat-message-row.is-mine .chat-bubble { background:#02aeba; color:#fff; }
+                #chat .chat-meta { margin-top:4px; color:#98a2b3; font-size:12px; }
+                #chat .chat-composer { display:flex; align-items:stretch; gap:10px; margin-top:14px; }
+                #chat .chat-composer input { min-width:0; flex:1 1 auto; }
+                #chat .chat-composer button { flex:0 0 auto; }
+                @media (max-width:576px) { #chat .chat-bubble { max-width:88%; } #chat .chat-messages { height:320px; } }
+            </style>
+        @endpush
         <div class="row">
             <div class="col-12">
                 <div class="card" id="chat">
@@ -326,11 +350,11 @@
                             </div>
                         </div>
 
-                        <div id="chat-messages" style="max-height:340px; overflow-y:auto;" class="border rounded p-2 bg-light-subtle">
+                        <div id="chat-messages" class="chat-messages">
                             @include('Store.prescriptions._messages', ['messages' => $prescription->messages()->with('sender')->get()])
                         </div>
 
-                        <form id="chat-form" method="POST" action="{{ route('store.prescriptions.messages.store', $prescription) }}" class="d-flex gap-2 mt-3">
+                        <form id="chat-form" method="POST" action="{{ route('store.prescriptions.messages.store', $prescription) }}" class="chat-composer">
                             @csrf
                             <input type="text" name="body" id="chat-body" class="form-control" placeholder="Type a message…" required maxlength="2000">
                             <button type="submit" class="btn btn-primary">Send</button>
@@ -409,6 +433,16 @@
             (function () {
                 const tbody = document.querySelector('#items-table tbody');
                 const totalInput = document.getElementById('total_amount');
+                const discountInput = document.getElementById('discount_amount');
+                const payableInput = document.getElementById('payable_amount');
+
+                if (!tbody || !totalInput || !discountInput || !payableInput) return;
+
+                function updatePayable() {
+                    const gross = parseFloat(totalInput.value || 0);
+                    const discount = parseFloat(discountInput.value || 0);
+                    payableInput.value = '₹' + Math.max(0, gross - discount).toFixed(2);
+                }
 
                 function rowCount() {
                     return tbody.querySelectorAll('tr').length;
@@ -422,7 +456,11 @@
                         if (!isNaN(qty) && !isNaN(price)) sum += qty * price;
                     });
                     totalInput.value = sum.toFixed(2);
+                    updatePayable();
                 }
+
+                totalInput.addEventListener('input', updatePayable);
+                discountInput.addEventListener('input', updatePayable);
 
                 document.getElementById('add-item-row')?.addEventListener('click', function () {
                     const i = rowCount();

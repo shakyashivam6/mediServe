@@ -51,8 +51,8 @@ class PrescriptionController extends Controller
             'files.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
             'remark' => ['nullable', 'string', 'max:1000'],
             'delivery_address' => ['required', 'string', 'max:1000'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
         $paths = collect($request->file('files'))

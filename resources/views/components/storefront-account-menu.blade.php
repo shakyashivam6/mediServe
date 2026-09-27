@@ -5,6 +5,7 @@
         </button>
         <div class="account-dropdown" id="account-dropdown" role="menu" hidden>
             <a role="menuitem" href="{{ route('orders.index') }}">Your Orders</a>
+            <a role="menuitem" href="{{ route('customer.prescriptions.index') }}">My Prescriptions</a>
             <a role="menuitem" href="{{ route('customer.profile.edit') }}">View Profile</a>
             <a role="menuitem" href="{{ route('customer.addresses.index') }}">View Address</a>
             <form method="POST" action="{{ route('logout') }}">

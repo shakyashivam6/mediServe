@@ -18,16 +18,6 @@
             @auth
                 @php
                     $unreadNotificationCount = auth()->user()->unreadNotifications()->count();
-                    // A single Prescription can rack up several unread
-                    // notifications over its life (claimed, a chat reply,
-                    // estimate sent, delivered...) — counting raw
-                    // notifications made the "My Prescriptions" badge read
-                    // far higher than the number of rows actually in that
-                    // list (e.g. 10 against 2 prescriptions). Count
-                    // distinct prescriptions instead so the badge matches
-                    // what's really there — same fix already applied to
-                    // the Store sidenav's own badge.
-                    $unreadPrescriptionCount = auth()->user()->unreadNotifications()->get()->pluck('data.prescription_id')->unique()->count();
                 @endphp
                 <nav>
                     <a href="{{ route('customer.notifications.index') }}" class="bell-link" aria-label="Notifications">
@@ -38,12 +28,6 @@
                     </a>
                     <a href="{{ route('orders.index') }}">Your Orders</a>
                     <a href="{{ route('customer.addresses.index') }}">View Address</a>
-                    <a href="{{ route('customer.prescriptions.index') }}">
-                        My Prescriptions
-                        @if ($unreadPrescriptionCount > 0)
-                            <span class="nav-badge">{{ $unreadPrescriptionCount }}</span>
-                        @endif
-                    </a>
                     <a href="{{ route('customer.profile.edit') }}">My Details</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

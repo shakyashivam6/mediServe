@@ -136,6 +136,7 @@ class PrescriptionController extends Controller
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
             'items.*.price' => ['required_with:items', 'numeric', 'min:0'],
             'total_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'call_notes' => ['nullable', 'string', 'max:2000'],
             'called' => ['nullable', 'boolean'],
             'status' => ['required', 'in:reviewing,contacted,awaiting_confirmation,confirmed,rejected'],
@@ -145,7 +146,20 @@ class PrescriptionController extends Controller
             'rejection_remark' => ['required_if:status,rejected', 'nullable', 'string', 'max:1000'],
         ]);
 
-        $totalAmount = $data['total_amount'] ?? $prescription->total_amount;
+        if ($prescription->status === 'confirmed' && $data['status'] !== 'confirmed') {
+            return back()->withErrors([
+                'status' => 'This order is already confirmed and cannot be sent for another estimate or rejected.',
+            ]);
+        }
+
+        $discountAmount = (float) ($data['discount_amount'] ?? 0);
+        $grossAmount = (float) ($data['total_amount'] ?? ((float) $prescription->total_amount + (float) $prescription->discount_amount));
+        if ($discountAmount > $grossAmount) {
+            return back()->withInput()->withErrors([
+                'discount_amount' => 'Discount cannot be greater than the amount before discount.',
+            ]);
+        }
+        $totalAmount = round($grossAmount - $discountAmount, 2);
 
         // Can't send an estimate the Customer (or the Store, on their
         // behalf) can act on without an actual total on it.
@@ -157,6 +171,7 @@ class PrescriptionController extends Controller
 
         $prescription->update([
             'items' => $data['items'] ?? $prescription->items,
+            'discount_amount' => $discountAmount,
             'total_amount' => $totalAmount,
             'call_notes' => $data['call_notes'] ?? $prescription->call_notes,
             'called_at' => $request->boolean('called') ? now() : $prescription->called_at,
