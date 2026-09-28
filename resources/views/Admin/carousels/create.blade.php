@@ -12,7 +12,7 @@
                         <div class="mb-3">
                             <label for="image" class="form-label">Image</label>
                             <input type="file" name="image" id="image" accept="image/*" class="form-control @error('image') is-invalid @enderror" required>
-                            <div class="form-text">Recommended: a wide banner image (e.g. 1600×500).</div>
+                            <div class="form-text">Best fit is a 16:5 wide banner (e.g. 1600×500) — the full image is always shown without cropping, but a different ratio will letterbox on the storefront.</div>
                             @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
