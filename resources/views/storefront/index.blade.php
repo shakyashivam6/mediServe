@@ -10,6 +10,8 @@
         .filterbar{display:grid;grid-template-columns:minmax(180px,1.5fr) repeat(4,minmax(130px,1fr)) auto;gap:10px;align-items:end;margin:18px 0 20px;padding:15px;background:#f7faf8;border:1px solid var(--line);border-radius:14px}.filter-field label{display:block;margin:0 0 5px;color:var(--muted);font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.55px}.filter-field select,.filter-field input{width:100%;height:40px;padding:0 10px;border:1px solid #dce8e2;border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:13px}.filter-reset{height:40px;padding:0 14px;background:#fff;border:1px solid #dce8e2;border-radius:8px;color:var(--green);font-weight:700;cursor:pointer;white-space:nowrap}.products-results.is-loading{opacity:.48;pointer-events:none;transition:opacity .15s}.page-summary{margin-right:auto}.pages{width:100%}
         @media(max-width:850px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.navin{gap:14px}.navlinks{gap:12px}.hero-art{font-size:68px;padding:10px}.filterbar{grid-template-columns:repeat(3,minmax(0,1fr))}}
         .pages{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 2px 0;color:var(--muted);font-size:13px}.pages nav{display:flex;align-items:center;gap:5px}.pages a,.pages span.page-current,.pages span.page-disabled{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);text-decoration:none}.pages a:hover{border-color:#b7dacb;background:#f3faf6;color:var(--green)}.pages span.page-current{border-color:var(--green);background:var(--green);color:#fff;font-weight:750}.pages span.page-disabled{color:#a1afaa;background:#f8faf9}.pages .page-ellipsis{border:0;background:transparent;min-width:22px;padding:0}.qty-control{height:40px;display:flex;align-items:center;justify-content:space-between;border:1px solid #c6e4d5;border-radius:9px;background:#f4faf6;color:var(--ink);overflow:hidden}.qty-control button{width:42px;height:100%;border:0;background:transparent;color:var(--green);font-size:20px;font-weight:750;cursor:pointer}.qty-control button:hover{background:#e3f4ea}.qty-control strong{font-size:14px;min-width:24px;text-align:center}.cart-feedback{position:fixed;right:20px;bottom:20px;z-index:5;padding:12px 18px;border-radius:10px;background:#073d31;color:#fff;box-shadow:0 8px 25px #1238;font-weight:650;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.cart-feedback.visible{opacity:1;transform:translateY(0)}
+        .carousel{position:relative;margin:28px auto 0;border-radius:22px;overflow:hidden}.carousel-track{display:flex}.carousel-slide{flex:0 0 100%;min-width:100%}.carousel-slide a,.carousel-slide .carousel-slide-static{display:block}.carousel-slide img{width:100%;height:320px;object-fit:cover;display:block}.carousel-caption{position:absolute;left:36px;bottom:26px;color:#fff;font-size:22px;font-weight:800;letter-spacing:-.5px;text-shadow:0 2px 10px #00000066;max-width:60%}.carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:#ffffffd9;border:0;font-size:17px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1}.carousel-nav:hover{background:#fff}.carousel-prev{left:14px}.carousel-next{right:14px}.carousel-dots{position:absolute;z-index:2;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:6px}.carousel-dot{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:#ffffffa6;cursor:pointer}.carousel-dot.is-active{width:22px;border-radius:5px;background:#fff}
+        @media(max-width:620px){.carousel{margin-top:20px}.carousel-slide img{height:170px}.carousel-caption{font-size:16px;left:18px;bottom:16px;max-width:70%}.carousel-nav{width:30px;height:30px;font-size:14px}}
         @media(max-width:620px){.wrap{width:calc(100% - 24px)}.navin{height:auto;min-height:65px;flex-wrap:wrap;padding:11px 0;gap:9px}.brand{font-size:20px}.search-wrap{order:3;flex-basis:100%;max-width:none}.navlinks{margin-left:auto;font-size:13px}.navlinks .login{display:none}.hero{padding:25px 22px;min-height:190px}.hero-art{font-size:48px;padding:0}.hero h1{font-size:29px}.hero p{font-size:13px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.photo{height:145px}.cardbody{padding:11px}.pname{font-size:14px}.section-head h2{font-size:21px}.pages{flex-direction:column;gap:9px}.pages a,.pages span.page-current,.pages span.page-disabled{min-width:34px;height:34px;padding:0 9px}.filterbar{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:11px}.filter-reset{width:100%}}
     </style>
 </head>
@@ -22,6 +24,37 @@
     </div></header>
     <main class="wrap">
         @if (session('shop_status'))<div class="notice">{{ session('shop_status') }}</div>@endif
+        @if ($carousels->isNotEmpty())
+            <div class="carousel" id="home-carousel">
+                <div class="carousel-track">
+                    @foreach ($carousels as $carousel)
+                        <div class="carousel-slide">
+                            @if ($carousel->link)
+                                <a href="{{ $carousel->link }}">
+                                    <img src="{{ $carousel->image_url }}" alt="{{ $carousel->title ?: 'Promotional banner' }}">
+                                </a>
+                            @else
+                                <div class="carousel-slide-static">
+                                    <img src="{{ $carousel->image_url }}" alt="{{ $carousel->title ?: 'Promotional banner' }}">
+                                </div>
+                            @endif
+                            @if ($carousel->title)
+                                <div class="carousel-caption">{{ $carousel->title }}</div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                @if ($carousels->count() > 1)
+                    <button type="button" class="carousel-nav carousel-prev" aria-label="Previous slide">‹</button>
+                    <button type="button" class="carousel-nav carousel-next" aria-label="Next slide">›</button>
+                    <div class="carousel-dots">
+                        @foreach ($carousels as $index => $carousel)
+                            <button type="button" class="carousel-dot @if ($index === 0) is-active @endif" data-slide="{{ $index }}" aria-label="Go to slide {{ $index + 1 }}"></button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
         <section class="hero"><div><div class="pill">Care that comes to you</div><h1>Everyday health, made a little easier.</h1><p>Find trusted medicines and wellness essentials in one place.</p><a class="btn" href="{{ route('prescription.upload.start') }}">Upload prescription</a></div><div class="hero-art" aria-hidden="true">💊🌿</div></section>
         <section id="products">
             <div class="section-head"><div><h2 id="products-heading">{{ request('q') ? 'Search results' : 'Popular products' }}</h2></div></div>
@@ -57,8 +90,8 @@
                             <div class="prices"><span class="price">{{ $product->price !== null ? '₹'.number_format((float)$product->price, 2) : 'Price on request' }}</span>@if($product->mrp && $product->price < $product->mrp)<span class="mrp">₹{{ number_format((float)$product->mrp, 2) }}</span>@endif</div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">@if($product->requires_prescription)<span class="rx">PRESCRIPTION REQUIRED</span>@else<span></span>@endif</div>
                             @php($quantityInCart = (int) ($cartQuantities[$product->id] ?? 0))
-                            <form class="cart-add-form" method="POST" action="{{ route('cart.add', $product) }}" data-product-id="{{ $product->id }}">@csrf<button class="buy">{{ $quantityInCart ? 'Add another' : 'Add to cart' }}</button></form>
-                            <div class="qty-control product-quantity" data-quantity-url="{{ route('cart.quantity', $product) }}" style="{{ $quantityInCart ? '' : 'display:none' }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><strong data-quantity>{{ $quantityInCart }}</strong><button type="button" data-qty-step="1" aria-label="Increase quantity">+</button></div>
+                            <form class="cart-add-form" method="POST" action="{{ route('cart.add', $product) }}" data-product-id="{{ $product->id }}" style="{{ $quantityInCart ? 'display:none' : '' }}">@csrf<button class="buy">Add to cart</button></form>
+                            <div class="qty-control product-quantity" data-quantity-url="{{ route('cart.quantity', $product) }}" data-remove-url="{{ route('cart.remove', $product) }}" style="{{ $quantityInCart ? '' : 'display:none' }}"><input type="hidden" name="_token" value="{{ csrf_token() }}"><button type="button" @if($quantityInCart <= 1) data-qty-remove aria-label="Remove from cart" title="Remove from cart" @else data-qty-step="-1" aria-label="Decrease quantity" @endif>@if($quantityInCart <= 1)<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>@else − @endif</button><strong data-quantity>{{ $quantityInCart }}</strong><button type="button" data-qty-step="1" aria-label="Increase quantity">+</button></div>
                         </div>
                     </article>
                 @empty<div class="empty">No products found. Try a different search.</div>@endforelse
@@ -250,6 +283,37 @@
             });
             input.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
             document.addEventListener('click', event => { if (!event.target.closest('.search-wrap')) close(); });
+        })();
+    </script>
+    <script>
+        (() => {
+            const root = document.getElementById('home-carousel');
+            if (!root) return;
+            const track = root.querySelector('.carousel-track');
+            const slides = root.querySelectorAll('.carousel-slide');
+            const dots = root.querySelectorAll('.carousel-dot');
+            if (slides.length < 2) return;
+
+            let index = 0;
+            let timer;
+
+            const show = (next) => {
+                index = (next + slides.length) % slides.length;
+                track.style.transform = `translateX(-${index * 100}%)`;
+                dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+            };
+
+            const restart = () => {
+                clearInterval(timer);
+                timer = setInterval(() => show(index + 1), 5000);
+            };
+
+            track.style.transition = 'transform .5s ease';
+            root.querySelector('.carousel-prev').addEventListener('click', () => { show(index - 1); restart(); });
+            root.querySelector('.carousel-next').addEventListener('click', () => { show(index + 1); restart(); });
+            dots.forEach((dot, i) => dot.addEventListener('click', () => { show(i); restart(); }));
+
+            restart();
         })();
     </script>
 </body>

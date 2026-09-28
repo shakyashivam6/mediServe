@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CaptainController;
+use App\Http\Controllers\Admin\CarouselController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\RoleController;
@@ -139,6 +140,13 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         Route::post('{product}/toggle-rx', [ProductController::class, 'toggleRx'])->name('toggle-rx');
         Route::post('{product}/toggle-active', [ProductController::class, 'toggleActive'])->name('toggle-active');
     });
+
+    Route::resource('carousels', CarouselController::class)
+        ->except(['show'])
+        ->middleware('permission:content.manage');
+    Route::post('carousels/{carousel}/toggle-active', [CarouselController::class, 'toggleActive'])
+        ->name('carousels.toggle-active')
+        ->middleware('permission:content.manage');
 });
 
 // Store's own self-service panel — separate from /admin entirely. A Store

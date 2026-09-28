@@ -18,14 +18,25 @@
             document.querySelectorAll('[data-cart-subtotal]').forEach(el => el.textContent = `₹${Number(state.subtotal).toFixed(2)}`);
         }
         if (state.productId && state.quantity !== undefined) {
+            const qty = Number(state.quantity);
+            const inCart = qty > 0;
+
             document.querySelectorAll(`[data-product-id="${state.productId}"]`).forEach(card => {
                 const controls = card.querySelector('.product-quantity');
+                const addForm = card.querySelector('.cart-add-form');
+
+                if (addForm) {
+                    addForm.style.display = inCart ? 'none' : '';
+                }
+
                 if (controls) {
-                    controls.style.display = Number(state.quantity) > 0 ? 'flex' : 'none';
-                    controls.querySelector('[data-quantity]').textContent = state.quantity;
+                    controls.style.display = inCart ? 'flex' : 'none';
+                    const qtyEl = controls.querySelector('[data-quantity]');
+                    if (qtyEl) qtyEl.textContent = qty;
+
                     const decreaseButton = controls.querySelector('[data-qty-step="-1"], [data-qty-remove]');
-                    if (decreaseButton && Number(state.quantity) > 0) {
-                        if (Number(state.quantity) === 1) {
+                    if (decreaseButton && inCart) {
+                        if (qty === 1) {
                             decreaseButton.removeAttribute('data-qty-step');
                             decreaseButton.setAttribute('data-qty-remove', '');
                             decreaseButton.setAttribute('aria-label', 'Remove from cart');
@@ -40,17 +51,15 @@
                         }
                     }
                 }
-                const addButton = card.querySelector('.cart-add-form button');
-                if (addButton) addButton.textContent = Number(state.quantity) > 0 ? 'Add another to cart' : 'Add to cart';
             });
             document.querySelectorAll(`[data-cart-row="${state.productId}"]`).forEach(row => {
-                if (Number(state.quantity) < 1) {
+                if (qty < 1) {
                     row.remove();
                     if (!document.querySelector('[data-cart-row]')) location.reload();
                     return;
                 }
                 const quantity = row.querySelector('[data-quantity]');
-                if (quantity) quantity.textContent = state.quantity;
+                if (quantity) quantity.textContent = qty;
                 const total = row.querySelector('[data-line-total]');
                 if (total && state.lineTotal !== null) total.textContent = `₹${Number(state.lineTotal).toFixed(2)}`;
             });
@@ -58,10 +67,17 @@
     };
 
     const send = async (url, options) => {
+        if (!url || url === 'undefined') {
+            throw new Error('Action URL is missing. Please refresh the page.');
+        }
         const response = await fetch(url, {
             ...options,
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers || {}) },
         });
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Something went wrong. Please try again.');
+        }
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Could not update your cart.');
         applyCartState(data);
@@ -73,13 +89,13 @@
         if (!form) return;
         event.preventDefault();
         const button = form.querySelector('button');
-        button.disabled = true;
+        if (button) button.disabled = true;
         try {
             await send(form.action, { method: 'POST', body: new FormData(form) });
         } catch (error) {
             notify(error.message, true);
         } finally {
-            button.disabled = false;
+            if (button) button.disabled = false;
         }
     });
 
@@ -87,6 +103,7 @@
         const removeButton = event.target.closest('[data-qty-remove]');
         if (removeButton) {
             const controls = removeButton.closest('.qty-control');
+            if (!controls || !controls.dataset.removeUrl) return;
             controls.querySelectorAll('button').forEach(el => el.disabled = true);
             try {
                 await send(controls.dataset.removeUrl, {
@@ -104,6 +121,7 @@
         const button = event.target.closest('[data-qty-step]');
         if (!button) return;
         const controls = button.closest('.qty-control');
+        if (!controls || !controls.dataset.quantityUrl) return;
         const current = Number(controls.querySelector('[data-quantity]').textContent);
         const quantity = Math.max(1, Math.min(99, current + Number(button.dataset.qtyStep)));
         if (quantity === current) return;

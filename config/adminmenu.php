@@ -60,6 +60,13 @@ return [
             'permission' => 'catalog.manage',
         ],
 
+        [
+            'label' => 'Carousel',
+            'icon' => 'ri-image-2-line',
+            'route' => 'admin.carousels.index',
+            'permission' => 'content.manage',
+        ],
+
         // Planned modules — uncomment once each one's routes/controller/views
         // exist. Permission slugs are already seeded (RolePermissionSeeder).
         //

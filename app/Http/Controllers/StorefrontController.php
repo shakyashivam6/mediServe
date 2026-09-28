@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Carousel;
 use App\Models\Product;
 use App\Models\CustomerAddress;
 use App\Models\Prescription;
@@ -68,7 +69,9 @@ class StorefrontController extends Controller
             ]);
         }
 
-        return view('storefront.index', compact('products', 'savedIds', 'cartCount', 'cartQuantities', 'manufacturers'));
+        $carousels = Carousel::active()->get();
+
+        return view('storefront.index', compact('products', 'savedIds', 'cartCount', 'cartQuantities', 'manufacturers', 'carousels'));
     }
 
     public function suggestions(Request $request): \Illuminate\Http\JsonResponse
