@@ -305,7 +305,7 @@
 
             const restart = () => {
                 clearInterval(timer);
-                timer = setInterval(() => show(index + 1), 5000);
+                timer = setInterval(() => show(index + 1), 2500);
             };
 
             track.style.transition = 'transform .5s ease';
